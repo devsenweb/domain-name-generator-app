@@ -1,0 +1,275 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Ivana's Mad Minute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&family=Gaegu:wght@700&display=swap">
+<style>
+/* Layout: one-column worksheet on graph paper; problem card on top, thumb keypad pinned low */
+:root{
+  --paper:#f7f8f3; --grid:#dfe6dc; --ink:#1f2a33; --muted:#5d6b73;
+  --pencil:#f2b705; --pencil-ink:#3a2c00; --red:#d23c2f; --green:#2e8b57;
+  --card:#ffffff; --key:#ffffff; --key-edge:#cfd8d2;
+  --display:"Gaegu","Comic Sans MS",cursive;
+  --body:"Lexend",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#141b20; --grid:#22303a; --ink:#eef2ef; --muted:#9aaab2;
+  --pencil:#f5c33b; --pencil-ink:#2a1f00; --red:#ff7266; --green:#5fd394;
+  --card:#1b252c; --key:#22303a; --key-edge:#33444f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#141b20; --grid:#22303a; --ink:#eef2ef; --muted:#9aaab2;
+  --pencil:#f5c33b; --pencil-ink:#2a1f00; --red:#ff7266; --green:#5fd394;
+  --card:#1b252c; --key:#22303a; --key-edge:#33444f; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;-webkit-tap-highlight-color:transparent;user-select:none}
+.wrap{max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:16px;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+h1{font-family:var(--display);font-size:2.6rem;line-height:1;margin:0;text-wrap:balance}
+h1 span{background:var(--pencil);color:var(--pencil-ink);padding:0 .2em;border-radius:4px}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+.label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:0 0 8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#timeSeg{grid-template-columns:repeat(3,1fr)}
+.seg button{font:600 1rem var(--body);padding:14px 10px;border-radius:12px;border:2px solid var(--key-edge);background:var(--card);color:var(--ink);cursor:pointer}
+.seg button small{display:block;font-weight:400;font-size:.78rem;color:var(--muted);margin-top:2px}
+.seg button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.go{font:800 1.4rem var(--body);padding:18px;border:0;border-radius:14px;background:var(--pencil);color:var(--pencil-ink);cursor:pointer;box-shadow:0 4px 0 #b88900}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #b88900}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--key-edge);border-radius:14px;padding:14px}
+.hist{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:5.5em 1fr 4.2em;gap:8px;align-items:center;font-size:.9rem}
+.bar{height:10px;border-radius:5px;background:var(--grid);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green)}
+.row b{text-align:right}
+.weak{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-weight:600;font-size:.9rem;padding:4px 10px;border-radius:999px;border:1.5px solid var(--red);color:var(--red)}
+.muted{color:var(--muted);font-size:.9rem;margin:0}
+/* run */
+.top{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.clock{font:800 2rem var(--body)}
+.clock.low{color:var(--red)}
+.timebar{height:8px;border-radius:4px;background:var(--grid);overflow:hidden}
+.timebar i{display:block;height:100%;background:var(--pencil);transition:width .25s linear}
+.prob{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:24px 12px;text-align:center;font-variant-numeric:tabular-nums}
+.fact{font:800 3.4rem var(--body);line-height:1}
+.ans{font:800 3.4rem var(--body);min-height:1.1em;margin-top:10px;border-bottom:3px dashed var(--muted);display:inline-block;min-width:2.2em}
+.prob.ok{border-color:var(--green)} .prob.bad{border-color:var(--red)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto}
+.pad button{font:800 1.9rem var(--body);padding:16px 0;border-radius:14px;border:2px solid var(--key-edge);background:var(--key);color:var(--ink);box-shadow:0 3px 0 var(--key-edge);cursor:pointer;touch-action:manipulation}
+.pad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--key-edge)}
+.pad .util{font-size:1rem;font-weight:600}
+/* results */
+.big{font:800 4rem var(--body);line-height:1;font-variant-numeric:tabular-nums}
+.verdict{font-family:var(--display);font-size:1.8rem;margin:4px 0 0}
+.misslist{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;font-variant-numeric:tabular-nums}
+.miss{background:var(--card);border:1.5px solid var(--red);border-radius:10px;padding:8px;font-weight:600;text-align:center}
+.miss s{color:var(--red);font-weight:400;margin-left:4px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ghost{font:600 1rem var(--body);padding:14px;border-radius:12px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.sync{font-size:.75rem;color:var(--muted);text-align:center;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" id="home">
+  <div>
+    <h1>Ivana's <span>Mad Minute</span></h1>
+    <p class="sub">30 multiplication facts. Beat the clock.</p>
+  </div>
+  <div>
+    <p class="label">Facts</p>
+    <div class="seg" id="modeSeg">
+      <button id="mAll" data-v="all" aria-pressed="true">All facts<small>0 to 9</small></button>
+      <button id="mFocus" data-v="focus" aria-pressed="false">Tough ones<small>6s, 7s, 8s, 9s</small></button>
+    </div>
+  </div>
+  <div>
+    <p class="label">Timer</p>
+    <div class="seg" id="timeSeg">
+      <button id="t60" data-v="60" aria-pressed="true">1 minute<small>like the real test</small></button>
+      <button id="t90" data-v="90" aria-pressed="false">1½ min<small>in between</small></button>
+      <button id="t120" data-v="120" aria-pressed="false">2 minutes<small>warm-up</small></button>
+    </div>
+  </div>
+  <button class="go" id="start">Start</button>
+  <div class="panel">
+    <p class="label">Recent scores</p>
+    <div class="hist" id="hist"></div>
+  </div>
+  <div class="panel">
+    <p class="label">Facts to practice</p>
+    <div class="weak" id="weak"></div>
+  </div>
+  <p class="sync" id="sync">Scores save on this device.</p>
+</div>
+
+<div class="wrap" id="run" hidden>
+  <div class="top"><span id="count">1 / 30</span><span class="clock" id="clock">1:00</span></div>
+  <div class="timebar"><i id="tbar" style="width:100%"></i></div>
+  <div class="prob" id="prob"><div class="fact" id="fact">7 × 8</div><div class="ans" id="ans"></div></div>
+  <div class="pad" id="pad">
+    <button>7</button><button>8</button><button>9</button>
+    <button>4</button><button>5</button><button>6</button>
+    <button>1</button><button>2</button><button>3</button>
+    <button class="util" data-k="skip">Skip</button><button>0</button><button class="util" data-k="del">⌫</button>
+  </div>
+  <button class="ghost" id="quit">Stop</button>
+</div>
+
+<div class="wrap" id="done" hidden>
+  <div class="panel" style="text-align:center">
+    <div class="big" id="score">24/30</div>
+    <p class="verdict" id="verdict">Nice work!</p>
+    <p class="muted" id="detail"></p>
+  </div>
+  <div>
+    <p class="label" id="missLabel">Missed or skipped</p>
+    <div class="misslist" id="misses"></div>
+  </div>
+  <div class="btns">
+    <button class="go" id="again">Go again</button>
+    <button class="ghost" id="practice">Practice misses</button>
+  </div>
+  <button class="ghost" id="home2">Home</button>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const LS="mm_ivana_v1";
+let runs=[], db=null;
+function lsGet(){try{return JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return{}}}
+function lsSet(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}}
+const saved=lsGet();
+runs=saved.runs||[];
+let mode=saved.mode||"all", secs=saved.secs||60;
+
+function setSeg(seg,val){seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v==String(val)))}
+$("modeSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;mode=b.dataset.v;setSeg($("modeSeg"),mode);lsSet({...lsGet(),mode})};
+$("timeSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;secs=+b.dataset.v;setSeg($("timeSeg"),secs);lsSet({...lsGet(),secs})};
+setSeg($("modeSeg"),mode);setSeg($("timeSeg"),secs);
+
+// miss weights from history (+ 8×4 from her last paper test)
+function missCounts(){
+  const m={"4x8":2};
+  runs.slice(-15).forEach(r=>(r.missed||[]).forEach(k=>{m[k]=(m[k]||0)+1}));
+  return m;
+}
+const key=(a,b)=>Math.min(a,b)+"x"+Math.max(a,b);
+
+function makeSet(only){
+  const mc=missCounts(), pool=[];
+  if(only&&only.length){only.forEach(k=>{const[a,b]=k.split("x").map(Number);pool.push([a,b,1])})}
+  else for(let a=0;a<=9;a++)for(let b=0;b<=9;b++){
+    if(mode==="focus"&&a<6&&b<6)continue;
+    let w=(a<2||b<2)?0.35:1;
+    if(mode==="focus"&&(a<2||b<2))w=0.15;
+    w+= (mc[key(a,b)]||0)*1.5;
+    pool.push([a,b,w]);
+  }
+  const out=[];let last="";
+  while(out.length<30){
+    const tot=pool.reduce((s,p)=>s+p[2],0);let r=Math.random()*tot,pick=pool[0];
+    for(const p of pool){r-=p[2];if(r<=0){pick=p;break}}
+    let[a,b]=pick; if(Math.random()<.5)[a,b]=[b,a];
+    const k=key(a,b); if(k===last&&pool.length>1)continue;
+    last=k;out.push([a,b]);
+  }
+  return out;
+}
+
+let set=[],i=0,typed="",right=0,missed=[],timer=null,endAt=0,startAt=0,lock=null,running=false;
+function show(id){["home","run","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
+function secsLabel(s){return s===90?"1½ min":(s/60)+" min"}
+function fmt(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+
+async function start(only){
+  set=makeSet(only);i=0;typed="";right=0;missed=[];running=true;
+  show("run");render();
+  startAt=Date.now();endAt=startAt+secs*1000;
+  clearInterval(timer);timer=setInterval(tick,200);tick();
+  try{lock=await navigator.wakeLock?.request("screen")}catch(e){}
+}
+function tick(){
+  const left=(endAt-Date.now())/1000;
+  $("clock").textContent=fmt(left);$("clock").classList.toggle("low",left<=10);
+  $("tbar").style.width=Math.max(0,left/secs*100)+"%";
+  if(left<=0)finish();
+}
+function render(){
+  const[a,b]=set[i];$("fact").textContent=a+" × "+b;$("ans").textContent=typed;
+  $("count").textContent=(i+1)+" / 30";
+}
+function flash(cls){const p=$("prob");p.classList.remove("ok","bad");void p.offsetWidth;p.classList.add(cls);setTimeout(()=>p.classList.remove(cls),220)}
+function next(correct){
+  const[a,b]=set[i];
+  if(correct){right++;flash("ok")}else{missed.push({a,b,got:typed});flash("bad")}
+  i++;typed="";
+  if(i>=30)finish();else render();
+}
+function press(k){
+  if(!running)return;
+  if(k==="del"){typed=typed.slice(0,-1);render();return}
+  if(k==="skip"){typed="";next(false);return}
+  if(typed.length>=2)return;
+  typed+=k;render();
+  const[a,b]=set[i],ans=String(a*b);
+  if(typed.length>=ans.length)setTimeout(()=>next(typed===ans),120);
+}
+$("pad").addEventListener("pointerdown",e=>{const b=e.target.closest("button");if(!b)return;e.preventDefault();press(b.dataset.k||b.textContent)});
+document.addEventListener("keydown",e=>{if($("run").hidden)return;if(/^\d$/.test(e.key))press(e.key);else if(e.key==="Backspace")press("del");else if(e.key===" ")press("skip")});
+
+function finish(){
+  if(!running)return;running=false;clearInterval(timer);
+  try{lock&&lock.release()}catch(e){}lock=null;
+  const used=Math.min(secs,Math.round((Date.now()-startAt)/1000));
+  // unanswered after time-up count as missed
+  for(let j=i;j<30;j++)missed.push({a:set[j][0],b:set[j][1],got:"",blank:true});
+  const run={at:Date.now(),mode,secs,score:right,total:30,used,missed:[...new Set(missed.map(m=>key(m.a,m.b)))]};
+  saveRun(run);
+  $("score").textContent=right+"/30";
+  const pct=Math.round(right/30*100);
+  $("verdict").textContent=pct>=97?"Perfect paper!":pct>=90?"That's an A!":pct>=80?"Getting fast!":"Keep practicing!";
+  $("detail").textContent=pct+"% · "+(i>=30?"finished in "+used+"s":"time ran out at #"+(i+1))+" · "+(mode==="focus"?"6s to 9s":"all facts")+", "+secsLabel(secs);
+  const ml=$("misses");ml.textContent="";
+  const shown=missed.filter(m=>!m.blank);
+  const blanks=missed.length-shown.length;
+  $("missLabel").textContent=missed.length?"Missed or skipped":"No misses";
+  shown.forEach(m=>{const d=document.createElement("div");d.className="miss";d.textContent=m.a+" × "+m.b+" = "+(m.a*m.b);if(m.got){const s=document.createElement("s");s.textContent=m.got;d.appendChild(s)}ml.appendChild(d)});
+  if(blanks){const d=document.createElement("p");d.className="muted";d.style.gridColumn="1/-1";d.textContent=blanks+" left when time ran out";ml.appendChild(d)}
+  $("practice").hidden=!run.missed.length;
+  lastMissed=run.missed;
+  show("done");
+}
+let lastMissed=[];
+async function saveRun(run){
+  runs.push(run);lsSet({...lsGet(),runs:runs.slice(-200)});renderHome();
+  if(db){try{await db.collection("runs").add(run)}catch(e){}}
+}
+function renderHome(){
+  const h=$("hist");h.textContent="";
+  const recent=runs.slice().sort((a,b)=>b.at-a.at).slice(0,8);
+  if(!recent.length){const p=document.createElement("p");p.className="muted";p.textContent="Example: Wed paper test was 23/30. Your first run here shows up in this list.";h.appendChild(p)}
+  recent.forEach(r=>{
+    const row=document.createElement("div");row.className="row";
+    const d=new Date(r.at);
+    const l=document.createElement("span");l.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(r.mode==="focus"?" ·6–9":"")+(r.secs===120?" ·2m":r.secs===90?" ·1½m":"");
+    const bar=document.createElement("div");bar.className="bar";const fill=document.createElement("i");fill.style.width=(r.score/30*100)+"%";bar.appendChild(fill);
+    const s=document.createElement("b");s.textContent=r.score+"/30";
+    row.append(l,bar,s);h.appendChild(row);
+  });
+  const w=$("weak");w.textContent="";
+  const mc=missCounts();
+  Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,8).forEach(([k])=>{const[a,b]=k.split("x");const c=document.createElement("span");c.className="chip";c.textContent=b+" × "+a;w.appendChild(c)});
+}
+renderHome();
+
+$("start").onclick=()=>start();
+$("again").onclick=()=>start();
+$("practice").onclick=()=>start(lastMissed);
+$("home2").onclick=()=>show("home");
+$("quit").onclick=()=>{running=false;clearInterval(timer);try{lock&&lock.release()}catch(e){}show("home")};
+
+</script>
+
+</html>
