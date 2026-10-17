@@ -1,54 +1,27 @@
-plugins {
-    id 'com.android.application'
-}
+plugins { id 'com.android.application' }
 
-// Each CI run gets a higher versionCode so a new APK installs over the old one.
-def buildNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+// The app pulls the latest index.html from this repo on every launch (self-updating).
+def updateUrl = "https://raw.githubusercontent.com/devsenweb/domain-name-generator-app/main/mad-minute/app/src/main/assets/index.html"
 
 android {
-    namespace 'com.madminute.app'
+    namespace 'com.dhil.madminute'
     compileSdk 34
-
     defaultConfig {
-        applicationId 'com.madminute.app'
+        applicationId 'com.dhil.madminute'
         minSdk 24
         targetSdk 34
-        versionCode buildNumber
-        versionName "1.0.${buildNumber}"
-
-        // The app fetches this file on every launch, so the UI can be updated
-        // by pushing a new index.html without reinstalling the APK.
-        buildConfigField "String", "UPDATE_URL",
-                "\"https://raw.githubusercontent.com/devsenweb/domain-name-generator-app/main/mad-minute/app/src/main/assets/index.html\""
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'UPDATE_URL', "\"${updateUrl}\""
     }
-
-    buildFeatures {
-        buildConfig true
-    }
-
-    // Fixed key, committed on purpose: every APK must be signed with the same
-    // key or Android refuses to install it over the previous one.
+    buildFeatures { buildConfig true }
     signingConfigs {
-        release {
-            storeFile file('madminute.keystore')
-            storePassword 'madminute'
-            keyAlias 'madminute'
-            keyPassword 'madminute'
-        }
+        // Fixed key committed in the repo so every build can install over the last one
+        fixed { storeFile file('madminute.keystore'); storePassword 'madminute'; keyAlias 'madminute'; keyPassword 'madminute' }
     }
-
     buildTypes {
-        release {
-            minifyEnabled false
-            signingConfig signingConfigs.release
-        }
-        debug {
-            signingConfig signingConfigs.release
-        }
+        debug { signingConfig signingConfigs.fixed }
+        release { minifyEnabled false; signingConfig signingConfigs.fixed }
     }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

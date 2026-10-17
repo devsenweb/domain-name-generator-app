@@ -1,503 +1,272 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="app-id" content="mad-minute-app">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Mad Minute</title>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Ivana's Mad Minute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&family=Gaegu:wght@700&display=swap">
 <style>
-  :root {
-    --brand: #5b3fd9;
-    --brand-ink: #ffffff;
-    --bg: #fff8ec;
-    --card: #ffffff;
-    --ink: #2a2140;
-    --muted: #7a7191;
-    --line: #e9e1d4;
-    --good: #1f9d55;
-    --bad: #e0413a;
-    --sun: #ffd447;
-    --key: #f3eefe;
-    --key-ink: #2a2140;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17132a;
-      --card: #221c3d;
-      --ink: #f3efff;
-      --muted: #a79fc2;
-      --line: #342c57;
-      --key: #2e2652;
-      --key-ink: #f3efff;
-    }
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; height: 100%; }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .screen { display: none; min-height: 100%; padding: 20px 16px 24px; flex-direction: column; max-width: 520px; margin: 0 auto; }
-  .screen.active { display: flex; }
-  h1 { font-size: 40px; margin: 8px 0 2px; letter-spacing: -0.5px; }
-  h1 span { color: var(--brand); }
-  .sub { color: var(--muted); margin: 0 0 18px; font-size: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 14px; }
-  .card h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 12px; }
-  .chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .chip {
-    border: 2px solid var(--line); background: transparent; color: var(--ink);
-    border-radius: 12px; font-size: 20px; font-weight: 700; padding: 10px 0; cursor: pointer;
-  }
-  .chip.on { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
-  .row { display: flex; gap: 8px; margin-top: 10px; }
-  .row .chip { flex: 1; font-size: 15px; }
-  .btn {
-    display: block; width: 100%; border: 0; border-radius: 16px; padding: 18px;
-    font-size: 22px; font-weight: 800; cursor: pointer; background: var(--brand); color: var(--brand-ink);
-  }
-  .btn:disabled { opacity: 0.4; }
-  .btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
-  .btn + .btn { margin-top: 10px; }
-  .stats { display: flex; justify-content: space-between; font-size: 16px; color: var(--muted); }
-  .stats b { color: var(--ink); font-size: 22px; display: block; }
-  .spacer { flex: 1; }
-  .version { text-align: center; color: var(--muted); font-size: 12px; margin-top: 14px; }
-
-  .banner {
-    display: none; background: var(--sun); color: #2a2140; border-radius: 14px; padding: 12px 14px;
-    font-weight: 700; margin-bottom: 14px; cursor: pointer; text-align: center;
-  }
-  .banner.show { display: block; }
-
-  /* Game */
-  #game { padding-top: 14px; }
-  .hud { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 20px; }
-  .hud .score { color: var(--good); }
-  .hud .quit { background: none; border: 0; color: var(--muted); font-size: 16px; font-weight: 700; padding: 6px; cursor: pointer; }
-  .bar { height: 12px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 10px 0 0; }
-  .bar i { display: block; height: 100%; width: 100%; background: var(--brand); border-radius: 99px; transform-origin: left; }
-  .bar.low i { background: var(--bad); }
-  .problem-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 190px; }
-  .problem { font-size: 64px; font-weight: 800; letter-spacing: 1px; }
-  .answer {
-    margin-top: 10px; min-width: 150px; height: 76px; border-radius: 16px; border: 3px solid var(--line);
-    background: var(--card); font-size: 48px; font-weight: 800; display: flex; align-items: center; justify-content: center;
-    transition: border-color .1s, background-color .1s;
-  }
-  .answer.good { border-color: var(--good); background: color-mix(in srgb, var(--good) 15%, var(--card)); }
-  .answer.bad { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 15%, var(--card)); }
-  .hint { height: 26px; margin-top: 8px; font-size: 20px; font-weight: 700; color: var(--bad); }
-  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .key {
-    border: 0; border-radius: 16px; background: var(--key); color: var(--key-ink);
-    font-size: 30px; font-weight: 800; padding: 16px 0; cursor: pointer;
-  }
-  .key:active { transform: scale(0.96); }
-  .key.go { background: var(--brand); color: var(--brand-ink); }
-  .countdown { font-size: 120px; font-weight: 900; color: var(--brand); }
-
-  /* Results */
-  .big { font-size: 84px; font-weight: 900; text-align: center; color: var(--brand); line-height: 1; margin-top: 8px; }
-  .big-label { text-align: center; color: var(--muted); font-size: 18px; margin-bottom: 8px; }
-  .cheer { text-align: center; font-size: 22px; font-weight: 800; margin: 6px 0 16px; min-height: 30px; }
-  .misses { display: flex; flex-wrap: wrap; gap: 8px; }
-  .miss { background: var(--key); border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: 18px; }
-  .miss em { color: var(--good); font-style: normal; }
-  .history { width: 100%; border-collapse: collapse; font-size: 15px; }
-  .history td { padding: 6px 0; border-top: 1px solid var(--line); }
-  .history td:last-child { text-align: right; font-weight: 700; }
+/* Layout: one-column worksheet on graph paper; problem card on top, thumb keypad pinned low */
+:root{
+  --paper:#f7f8f3; --grid:#dfe6dc; --ink:#1f2a33; --muted:#5d6b73;
+  --pencil:#f2b705; --pencil-ink:#3a2c00; --red:#d23c2f; --green:#2e8b57;
+  --card:#ffffff; --key:#ffffff; --key-edge:#cfd8d2;
+  --display:"Gaegu","Comic Sans MS",cursive;
+  --body:"Lexend",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#141b20; --grid:#22303a; --ink:#eef2ef; --muted:#9aaab2;
+  --pencil:#f5c33b; --pencil-ink:#2a1f00; --red:#ff7266; --green:#5fd394;
+  --card:#1b252c; --key:#22303a; --key-edge:#33444f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#141b20; --grid:#22303a; --ink:#eef2ef; --muted:#9aaab2;
+  --pencil:#f5c33b; --pencil-ink:#2a1f00; --red:#ff7266; --green:#5fd394;
+  --card:#1b252c; --key:#22303a; --key-edge:#33444f; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;-webkit-tap-highlight-color:transparent;user-select:none}
+.wrap{max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:16px;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+h1{font-family:var(--display);font-size:2.6rem;line-height:1;margin:0;text-wrap:balance}
+h1 span{background:var(--pencil);color:var(--pencil-ink);padding:0 .2em;border-radius:4px}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+.label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:0 0 8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{font:600 1rem var(--body);padding:14px 10px;border-radius:12px;border:2px solid var(--key-edge);background:var(--card);color:var(--ink);cursor:pointer}
+.seg button small{display:block;font-weight:400;font-size:.78rem;color:var(--muted);margin-top:2px}
+.seg button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.go{font:800 1.4rem var(--body);padding:18px;border:0;border-radius:14px;background:var(--pencil);color:var(--pencil-ink);cursor:pointer;box-shadow:0 4px 0 #b88900}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #b88900}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--key-edge);border-radius:14px;padding:14px}
+.hist{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:5.5em 1fr 4.2em;gap:8px;align-items:center;font-size:.9rem}
+.bar{height:10px;border-radius:5px;background:var(--grid);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green)}
+.row b{text-align:right}
+.weak{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-weight:600;font-size:.9rem;padding:4px 10px;border-radius:999px;border:1.5px solid var(--red);color:var(--red)}
+.muted{color:var(--muted);font-size:.9rem;margin:0}
+/* run */
+.top{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.clock{font:800 2rem var(--body)}
+.clock.low{color:var(--red)}
+.timebar{height:8px;border-radius:4px;background:var(--grid);overflow:hidden}
+.timebar i{display:block;height:100%;background:var(--pencil);transition:width .25s linear}
+.prob{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:24px 12px;text-align:center;font-variant-numeric:tabular-nums}
+.fact{font:800 3.4rem var(--body);line-height:1}
+.ans{font:800 3.4rem var(--body);min-height:1.1em;margin-top:10px;border-bottom:3px dashed var(--muted);display:inline-block;min-width:2.2em}
+.prob.ok{border-color:var(--green)} .prob.bad{border-color:var(--red)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto}
+.pad button{font:800 1.9rem var(--body);padding:16px 0;border-radius:14px;border:2px solid var(--key-edge);background:var(--key);color:var(--ink);box-shadow:0 3px 0 var(--key-edge);cursor:pointer;touch-action:manipulation}
+.pad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--key-edge)}
+.pad .util{font-size:1rem;font-weight:600}
+/* results */
+.big{font:800 4rem var(--body);line-height:1;font-variant-numeric:tabular-nums}
+.verdict{font-family:var(--display);font-size:1.8rem;margin:4px 0 0}
+.misslist{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;font-variant-numeric:tabular-nums}
+.miss{background:var(--card);border:1.5px solid var(--red);border-radius:10px;padding:8px;font-weight:600;text-align:center}
+.miss s{color:var(--red);font-weight:400;margin-left:4px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ghost{font:600 1rem var(--body);padding:14px;border-radius:12px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.sync{font-size:.75rem;color:var(--muted);text-align:center;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-</head>
-<body>
 
-<!-- HOME -->
-<section id="home" class="screen active">
-  <h1>Mad <span>Minute</span></h1>
-  <p class="sub">How many times-table facts can you get right?</p>
-
-  <div id="updateBanner" class="banner">✨ A new version is ready. Tap to update!</div>
-
-  <div class="card">
-    <h2>Times tables</h2>
-    <div class="chips" id="tableChips"></div>
-    <div class="row">
-      <button class="chip" id="allTables">All</button>
-      <button class="chip" id="noTables">Clear</button>
+<div class="wrap" id="home">
+  <div>
+    <h1>Ivana's <span>Mad Minute</span></h1>
+    <p class="sub">30 multiplication facts. Beat the clock.</p>
+  </div>
+  <div>
+    <p class="label">Facts</p>
+    <div class="seg" id="modeSeg">
+      <button id="mAll" data-v="all" aria-pressed="true">All facts<small>0 to 9</small></button>
+      <button id="mFocus" data-v="focus" aria-pressed="false">Tough ones<small>6s, 7s, 8s, 9s</small></button>
     </div>
   </div>
-
-  <div class="card">
-    <h2>Time</h2>
-    <div class="row" id="timeChips" style="margin-top:0"></div>
-  </div>
-
-  <div class="card">
-    <div class="stats">
-      <div>Best score<b id="bestScore">–</b></div>
-      <div>Games played<b id="gamesPlayed">0</b></div>
-      <div>Last score<b id="lastScore">–</b></div>
+  <div>
+    <p class="label">Timer</p>
+    <div class="seg" id="timeSeg">
+      <button id="t60" data-v="60" aria-pressed="true">1 minute<small>like the real test</small></button>
+      <button id="t120" data-v="120" aria-pressed="false">2 minutes<small>warm-up</small></button>
     </div>
   </div>
-
-  <div class="spacer"></div>
-  <button class="btn" id="startBtn">Start!</button>
-  <div class="version" id="version"></div>
-</section>
-
-<!-- GAME -->
-<section id="game" class="screen">
-  <div class="hud">
-    <button class="quit" id="quitBtn">✕ Quit</button>
-    <span id="timeLeft">60</span>
-    <span class="score">✓ <span id="liveScore">0</span></span>
+  <button class="go" id="start">Start</button>
+  <div class="panel">
+    <p class="label">Recent scores</p>
+    <div class="hist" id="hist"></div>
   </div>
-  <div class="bar" id="bar"><i id="barFill"></i></div>
-
-  <div class="problem-wrap">
-    <div id="countdown" class="countdown"></div>
-    <div id="problemBox" style="display:none; text-align:center">
-      <div class="problem" id="problem"></div>
-      <div class="answer" id="answer"></div>
-      <div class="hint" id="hint"></div>
-    </div>
+  <div class="panel">
+    <p class="label">Facts to practice</p>
+    <div class="weak" id="weak"></div>
   </div>
+  <p class="sync" id="sync">Scores save on this device.</p>
+</div>
 
+<div class="wrap" id="run" hidden>
+  <div class="top"><span id="count">1 / 30</span><span class="clock" id="clock">1:00</span></div>
+  <div class="timebar"><i id="tbar" style="width:100%"></i></div>
+  <div class="prob" id="prob"><div class="fact" id="fact">7 × 8</div><div class="ans" id="ans"></div></div>
   <div class="pad" id="pad">
-    <button class="key" data-k="1">1</button>
-    <button class="key" data-k="2">2</button>
-    <button class="key" data-k="3">3</button>
-    <button class="key" data-k="4">4</button>
-    <button class="key" data-k="5">5</button>
-    <button class="key" data-k="6">6</button>
-    <button class="key" data-k="7">7</button>
-    <button class="key" data-k="8">8</button>
-    <button class="key" data-k="9">9</button>
-    <button class="key" data-k="back">⌫</button>
-    <button class="key" data-k="0">0</button>
-    <button class="key go" data-k="enter">✓</button>
+    <button>7</button><button>8</button><button>9</button>
+    <button>4</button><button>5</button><button>6</button>
+    <button>1</button><button>2</button><button>3</button>
+    <button class="util" data-k="skip">Skip</button><button>0</button><button class="util" data-k="del">⌫</button>
   </div>
-</section>
+  <button class="ghost" id="quit">Stop</button>
+</div>
 
-<!-- RESULTS -->
-<section id="results" class="screen">
-  <div class="big" id="finalScore">0</div>
-  <div class="big-label" id="finalLabel">correct</div>
-  <div class="cheer" id="cheer"></div>
-
-  <div class="card">
-    <div class="stats">
-      <div>Tried<b id="rTried">0</b></div>
-      <div>Missed<b id="rMissed">0</b></div>
-      <div>Accuracy<b id="rAcc">–</b></div>
-    </div>
+<div class="wrap" id="done" hidden>
+  <div class="panel" style="text-align:center">
+    <div class="big" id="score">24/30</div>
+    <p class="verdict" id="verdict">Nice work!</p>
+    <p class="muted" id="detail"></p>
   </div>
-
-  <div class="card" id="missCard">
-    <h2>Practice these</h2>
-    <div class="misses" id="missList"></div>
+  <div>
+    <p class="label" id="missLabel">Missed or skipped</p>
+    <div class="misslist" id="misses"></div>
   </div>
-
-  <div class="card" id="historyCard">
-    <h2>Recent games</h2>
-    <table class="history" id="historyTable"></table>
+  <div class="btns">
+    <button class="go" id="again">Go again</button>
+    <button class="ghost" id="practice">Practice misses</button>
   </div>
-
-  <div class="spacer"></div>
-  <button class="btn" id="againBtn">Play again</button>
-  <button class="btn ghost" id="practiceBtn">Practice my misses</button>
-  <button class="btn ghost" id="homeBtn">Home</button>
-</section>
+  <button class="ghost" id="home2">Home</button>
+</div>
 
 <script>
-(function () {
-  "use strict";
+const $=id=>document.getElementById(id);
+const LS="mm_ivana_v1";
+let runs=[], db=null;
+function lsGet(){try{return JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return{}}}
+function lsSet(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}}
+const saved=lsGet();
+runs=saved.runs||[];
+let mode=saved.mode||"all", secs=saved.secs||60;
 
-  var HTML_VERSION = "2026-10-17";
-  var TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  var TIMES = [30, 60, 120];
-  var STORE_KEY = "madMinute.v1";
+function setSeg(seg,val){seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v==String(val)))}
+$("modeSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;mode=b.dataset.v;setSeg($("modeSeg"),mode);lsSet({...lsGet(),mode})};
+$("timeSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;secs=+b.dataset.v;setSeg($("timeSeg"),secs);lsSet({...lsGet(),secs})};
+setSeg($("modeSeg"),mode);setSeg($("timeSeg"),secs);
 
-  // ---------- storage (never let a storage error break the game) ----------
-  function load() {
-    try {
-      var raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {};
+// miss weights from history (+ 8×4 from her last paper test)
+function missCounts(){
+  const m={"4x8":2};
+  runs.slice(-15).forEach(r=>(r.missed||[]).forEach(k=>{m[k]=(m[k]||0)+1}));
+  return m;
+}
+const key=(a,b)=>Math.min(a,b)+"x"+Math.max(a,b);
+
+function makeSet(only){
+  const mc=missCounts(), pool=[];
+  if(only&&only.length){only.forEach(k=>{const[a,b]=k.split("x").map(Number);pool.push([a,b,1])})}
+  else for(let a=0;a<=9;a++)for(let b=0;b<=9;b++){
+    if(mode==="focus"&&a<6&&b<6)continue;
+    let w=(a<2||b<2)?0.35:1;
+    if(mode==="focus"&&(a<2||b<2))w=0.15;
+    w+= (mc[key(a,b)]||0)*1.5;
+    pool.push([a,b,w]);
   }
-  function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+  const out=[];let last="";
+  while(out.length<30){
+    const tot=pool.reduce((s,p)=>s+p[2],0);let r=Math.random()*tot,pick=pool[0];
+    for(const p of pool){r-=p[2];if(r<=0){pick=p;break}}
+    let[a,b]=pick; if(Math.random()<.5)[a,b]=[b,a];
+    const k=key(a,b); if(k===last&&pool.length>1)continue;
+    last=k;out.push([a,b]);
   }
-  var store = load();
-  store.tables = Array.isArray(store.tables) && store.tables.length ? store.tables : [2, 3, 4, 5, 10];
-  store.seconds = TIMES.indexOf(store.seconds) >= 0 ? store.seconds : 60;
-  store.best = store.best || {};
-  store.history = Array.isArray(store.history) ? store.history : [];
+  return out;
+}
 
-  function $(id) { return document.getElementById(id); }
-  function show(id) {
-    ["home", "game", "results"].forEach(function (s) { $(s).classList.toggle("active", s === id); });
-    window.scrollTo(0, 0);
-  }
-  function bestKey() { return store.tables.slice().sort(function (a, b) { return a - b; }).join(",") + "@" + store.seconds; }
-  function timeLabel(s) { return s < 60 ? s + " sec" : (s / 60) + " min"; }
+let set=[],i=0,typed="",right=0,missed=[],timer=null,endAt=0,startAt=0,lock=null,running=false;
+function show(id){["home","run","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
+function fmt(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 
-  // ---------- home ----------
-  function renderHome() {
-    var chips = $("tableChips");
-    chips.innerHTML = "";
-    TABLES.forEach(function (t) {
-      var b = document.createElement("button");
-      b.className = "chip" + (store.tables.indexOf(t) >= 0 ? " on" : "");
-      b.textContent = t;
-      b.onclick = function () {
-        var i = store.tables.indexOf(t);
-        if (i >= 0) store.tables.splice(i, 1); else store.tables.push(t);
-        save(); renderHome();
-      };
-      chips.appendChild(b);
-    });
+async function start(only){
+  set=makeSet(only);i=0;typed="";right=0;missed=[];running=true;
+  show("run");render();
+  startAt=Date.now();endAt=startAt+secs*1000;
+  clearInterval(timer);timer=setInterval(tick,200);tick();
+  try{lock=await navigator.wakeLock?.request("screen")}catch(e){}
+}
+function tick(){
+  const left=(endAt-Date.now())/1000;
+  $("clock").textContent=fmt(left);$("clock").classList.toggle("low",left<=10);
+  $("tbar").style.width=Math.max(0,left/secs*100)+"%";
+  if(left<=0)finish();
+}
+function render(){
+  const[a,b]=set[i];$("fact").textContent=a+" × "+b;$("ans").textContent=typed;
+  $("count").textContent=(i+1)+" / 30";
+}
+function flash(cls){const p=$("prob");p.classList.remove("ok","bad");void p.offsetWidth;p.classList.add(cls);setTimeout(()=>p.classList.remove(cls),220)}
+function next(correct){
+  const[a,b]=set[i];
+  if(correct){right++;flash("ok")}else{missed.push({a,b,got:typed});flash("bad")}
+  i++;typed="";
+  if(i>=30)finish();else render();
+}
+function press(k){
+  if(!running)return;
+  if(k==="del"){typed=typed.slice(0,-1);render();return}
+  if(k==="skip"){typed="";next(false);return}
+  if(typed.length>=2)return;
+  typed+=k;render();
+  const[a,b]=set[i],ans=String(a*b);
+  if(typed.length>=ans.length)setTimeout(()=>next(typed===ans),120);
+}
+$("pad").addEventListener("pointerdown",e=>{const b=e.target.closest("button");if(!b)return;e.preventDefault();press(b.dataset.k||b.textContent)});
+document.addEventListener("keydown",e=>{if($("run").hidden)return;if(/^\d$/.test(e.key))press(e.key);else if(e.key==="Backspace")press("del");else if(e.key===" ")press("skip")});
 
-    var times = $("timeChips");
-    times.innerHTML = "";
-    TIMES.forEach(function (s) {
-      var b = document.createElement("button");
-      b.className = "chip" + (store.seconds === s ? " on" : "");
-      b.textContent = timeLabel(s);
-      b.onclick = function () { store.seconds = s; save(); renderHome(); };
-      times.appendChild(b);
-    });
-
-    var best = store.best[bestKey()];
-    $("bestScore").textContent = best != null ? best : "–";
-    $("gamesPlayed").textContent = store.history.length;
-    $("lastScore").textContent = store.history.length ? store.history[0].score : "–";
-    $("startBtn").disabled = store.tables.length === 0;
-    $("startBtn").textContent = store.tables.length ? "Start!" : "Pick a times table";
-  }
-  $("allTables").onclick = function () { store.tables = TABLES.slice(); save(); renderHome(); };
-  $("noTables").onclick = function () { store.tables = []; save(); renderHome(); };
-  $("startBtn").onclick = function () { startGame(null); };
-
-  var appVersion = "";
-  try { if (window.MadMinuteApp) appVersion = window.MadMinuteApp.appVersion(); } catch (e) {}
-  $("version").textContent = (appVersion ? "App " + appVersion + " · " : "") + "Page " + HTML_VERSION;
-
-  // Called by the Android app when it has downloaded a newer page.
-  window.mmUpdateReady = function () { $("updateBanner").classList.add("show"); };
-  $("updateBanner").onclick = function () {
-    if (window.MadMinuteApp) window.MadMinuteApp.applyUpdate(); else location.reload();
-  };
-
-  // ---------- game ----------
-  var game = null;
-
-  function makeProblem(pool) {
-    var a, b, tries = 0;
-    do {
-      if (pool) {
-        var p = pool[Math.floor(Math.random() * pool.length)];
-        a = p[0]; b = p[1];
-      } else {
-        a = store.tables[Math.floor(Math.random() * store.tables.length)];
-        b = 1 + Math.floor(Math.random() * 12);
-        if (Math.random() < 0.5) { var t = a; a = b; b = t; }
-      }
-      tries++;
-    } while (game.last && game.last[0] === a && game.last[1] === b && tries < 10);
-    game.last = [a, b];
-    game.current = { a: a, b: b, answer: a * b };
-    game.input = "";
-    $("problem").textContent = a + " × " + b;
-    renderInput("");
-  }
-
-  function renderInput(state) {
-    var el = $("answer");
-    el.textContent = game.input || " ";
-    el.className = "answer" + (state ? " " + state : "");
-  }
-
-  function startGame(pool) {
-    game = {
-      pool: pool, seconds: store.seconds, score: 0, tried: 0, misses: [],
-      input: "", locked: true, running: false, last: null, raf: 0
-    };
-    $("liveScore").textContent = "0";
-    $("timeLeft").textContent = game.seconds;
-    $("barFill").style.transform = "scaleX(1)";
-    $("bar").classList.remove("low");
-    $("problemBox").style.display = "none";
-    $("hint").textContent = "";
-    show("game");
-
-    var n = 3;
-    var cd = $("countdown");
-    cd.style.display = "block";
-    cd.textContent = n;
-    game.countdownTimer = setInterval(function () {
-      n--;
-      if (n > 0) { cd.textContent = n; return; }
-      clearInterval(game.countdownTimer);
-      cd.style.display = "none";
-      $("problemBox").style.display = "block";
-      game.running = true;
-      game.locked = false;
-      game.endAt = performance.now() + game.seconds * 1000;
-      makeProblem(pool);
-      tick();
-    }, 700);
-  }
-
-  function tick() {
-    if (!game || !game.running) return;
-    var left = Math.max(0, game.endAt - performance.now());
-    $("timeLeft").textContent = Math.ceil(left / 1000);
-    $("barFill").style.transform = "scaleX(" + (left / (game.seconds * 1000)) + ")";
-    $("bar").classList.toggle("low", left < 10000);
-    if (left <= 0) { endGame(); return; }
-    game.raf = requestAnimationFrame(tick);
-  }
-
-  function press(k) {
-    if (!game || !game.running || game.locked) return;
-    if (k === "back") { game.input = game.input.slice(0, -1); renderInput(""); return; }
-    if (k === "enter") { if (game.input) check(); return; }
-    if (game.input.length >= 3) return;
-    game.input += k;
-    renderInput("");
-    // Auto-check once the answer has as many digits as the right answer.
-    if (game.input.length >= String(game.current.answer).length) check();
-  }
-
-  function check() {
-    var c = game.current;
-    var ok = parseInt(game.input, 10) === c.answer;
-    game.tried++;
-    game.locked = true;
-    if (ok) {
-      game.score++;
-      $("liveScore").textContent = game.score;
-      renderInput("good");
-      setTimeout(next, 180);
-    } else {
-      game.misses.push([c.a, c.b]);
-      renderInput("bad");
-      $("hint").textContent = c.a + " × " + c.b + " = " + c.answer;
-      setTimeout(next, 900);
-    }
-  }
-
-  function next() {
-    if (!game || !game.running) return;
-    $("hint").textContent = "";
-    game.locked = false;
-    makeProblem(game.pool);
-  }
-
-  function stopGame() {
-    if (!game) return;
-    game.running = false;
-    clearInterval(game.countdownTimer);
-    cancelAnimationFrame(game.raf);
-  }
-
-  function endGame() {
-    stopGame();
-    var key = bestKey();
-    var practice = !!game.pool;
-    var prevBest = store.best[key];
-    var newBest = !practice && game.score > 0 && (prevBest == null || game.score > prevBest);
-    if (newBest) store.best[key] = game.score;
-    if (!practice) {
-      store.history.unshift({
-        when: Date.now(), score: game.score, tried: game.tried,
-        tables: store.tables.slice().sort(function (a, b) { return a - b; }), seconds: game.seconds
-      });
-      store.history = store.history.slice(0, 30);
-    }
-    save();
-    renderResults(newBest, prevBest, practice);
-    show("results");
-  }
-
-  $("quitBtn").onclick = function () { stopGame(); renderHome(); show("home"); };
-
-  $("pad").addEventListener("pointerdown", function (e) {
-    var b = e.target.closest(".key");
-    if (!b) return;
-    e.preventDefault();
-    press(b.getAttribute("data-k"));
+function finish(){
+  if(!running)return;running=false;clearInterval(timer);
+  try{lock&&lock.release()}catch(e){}lock=null;
+  const used=Math.min(secs,Math.round((Date.now()-startAt)/1000));
+  // unanswered after time-up count as missed
+  for(let j=i;j<30;j++)missed.push({a:set[j][0],b:set[j][1],got:"",blank:true});
+  const run={at:Date.now(),mode,secs,score:right,total:30,used,missed:[...new Set(missed.map(m=>key(m.a,m.b)))]};
+  saveRun(run);
+  $("score").textContent=right+"/30";
+  const pct=Math.round(right/30*100);
+  $("verdict").textContent=pct>=97?"Perfect paper!":pct>=90?"That's an A!":pct>=80?"Getting fast!":"Keep practicing!";
+  $("detail").textContent=pct+"% · "+(i>=30?"finished in "+used+"s":"time ran out at #"+(i+1))+" · "+(mode==="focus"?"6s to 9s":"all facts")+", "+(secs/60)+" min";
+  const ml=$("misses");ml.textContent="";
+  const shown=missed.filter(m=>!m.blank);
+  const blanks=missed.length-shown.length;
+  $("missLabel").textContent=missed.length?"Missed or skipped":"No misses";
+  shown.forEach(m=>{const d=document.createElement("div");d.className="miss";d.textContent=m.a+" × "+m.b+" = "+(m.a*m.b);if(m.got){const s=document.createElement("s");s.textContent=m.got;d.appendChild(s)}ml.appendChild(d)});
+  if(blanks){const d=document.createElement("p");d.className="muted";d.style.gridColumn="1/-1";d.textContent=blanks+" left when time ran out";ml.appendChild(d)}
+  $("practice").hidden=!run.missed.length;
+  lastMissed=run.missed;
+  show("done");
+}
+let lastMissed=[];
+async function saveRun(run){
+  runs.push(run);lsSet({...lsGet(),runs:runs.slice(-200)});renderHome();
+  if(db){try{await db.collection("runs").add(run)}catch(e){}}
+}
+function renderHome(){
+  const h=$("hist");h.textContent="";
+  const recent=runs.slice().sort((a,b)=>b.at-a.at).slice(0,8);
+  if(!recent.length){const p=document.createElement("p");p.className="muted";p.textContent="Example: Wed paper test was 23/30. Your first run here shows up in this list.";h.appendChild(p)}
+  recent.forEach(r=>{
+    const row=document.createElement("div");row.className="row";
+    const d=new Date(r.at);
+    const l=document.createElement("span");l.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(r.mode==="focus"?" ·6–9":"")+(r.secs===120?" ·2m":"");
+    const bar=document.createElement("div");bar.className="bar";const fill=document.createElement("i");fill.style.width=(r.score/30*100)+"%";bar.appendChild(fill);
+    const s=document.createElement("b");s.textContent=r.score+"/30";
+    row.append(l,bar,s);h.appendChild(row);
   });
-  document.addEventListener("keydown", function (e) {
-    if (!$("game").classList.contains("active")) return;
-    if (/^[0-9]$/.test(e.key)) press(e.key);
-    else if (e.key === "Backspace") press("back");
-    else if (e.key === "Enter") press("enter");
-  });
+  const w=$("weak");w.textContent="";
+  const mc=missCounts();
+  Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,8).forEach(([k])=>{const[a,b]=k.split("x");const c=document.createElement("span");c.className="chip";c.textContent=b+" × "+a;w.appendChild(c)});
+}
+renderHome();
 
-  // ---------- results ----------
-  function renderResults(newBest, prevBest, practice) {
-    $("finalScore").textContent = game.score;
-    $("finalLabel").textContent = "correct in " + timeLabel(game.seconds) + (practice ? " (practice)" : "");
-    $("rTried").textContent = game.tried;
-    $("rMissed").textContent = game.misses.length;
-    $("rAcc").textContent = game.tried ? Math.round(100 * game.score / game.tried) + "%" : "–";
+$("start").onclick=()=>start();
+$("again").onclick=()=>start();
+$("practice").onclick=()=>start(lastMissed);
+$("home2").onclick=()=>show("home");
+$("quit").onclick=()=>{running=false;clearInterval(timer);try{lock&&lock.release()}catch(e){}show("home")};
 
-    var cheer;
-    if (newBest && prevBest != null) cheer = "🏆 New best! (was " + prevBest + ")";
-    else if (newBest) cheer = "🏆 First score on the board!";
-    else if (game.tried && game.misses.length === 0) cheer = "🌟 Perfect, no misses!";
-    else if (game.score >= 20) cheer = "🔥 Super fast!";
-    else if (game.score > 0) cheer = "👍 Nice work, keep going!";
-    else cheer = "Give it another go!";
-    $("cheer").textContent = cheer;
-
-    // Unique misses, in the order they happened.
-    var seen = {}, uniq = [];
-    game.misses.forEach(function (m) {
-      var k = m[0] + "x" + m[1];
-      if (!seen[k]) { seen[k] = 1; uniq.push(m); }
-    });
-    game.uniqueMisses = uniq;
-    $("missCard").style.display = uniq.length ? "block" : "none";
-    $("practiceBtn").style.display = uniq.length ? "block" : "none";
-    $("missList").innerHTML = "";
-    uniq.forEach(function (m) {
-      var d = document.createElement("div");
-      d.className = "miss";
-      d.innerHTML = m[0] + " × " + m[1] + " = <em>" + (m[0] * m[1]) + "</em>";
-      $("missList").appendChild(d);
-    });
-
-    var rows = store.history.slice(0, 5);
-    $("historyCard").style.display = rows.length ? "block" : "none";
-    $("historyTable").innerHTML = "";
-    rows.forEach(function (h) {
-      var tr = document.createElement("tr");
-      var d = new Date(h.when);
-      var tds = [
-        d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " +
-          d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
-        "×" + (h.tables.length === 12 ? "all" : h.tables.join(",")),
-        h.score + " / " + h.tried
-      ];
-      tds.forEach(function (t) { var td = document.createElement("td"); td.textContent = t; tr.appendChild(td); });
-      $("historyTable").appendChild(tr);
-    });
-  }
-
-  $("againBtn").onclick = function () { startGame(game && game.pool); };
-  $("practiceBtn").onclick = function () { startGame(game.uniqueMisses); };
-  $("homeBtn").onclick = function () { renderHome(); show("home"); };
-
-  renderHome();
-})();
 </script>
-</body>
+
 </html>
