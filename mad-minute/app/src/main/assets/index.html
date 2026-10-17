@@ -30,6 +30,7 @@ h1 span{background:var(--pencil);color:var(--pencil-ink);padding:0 .2em;border-r
 .sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
 .label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:0 0 8px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#timeSeg{grid-template-columns:repeat(3,1fr)}
 .seg button{font:600 1rem var(--body);padding:14px 10px;border-radius:12px;border:2px solid var(--key-edge);background:var(--card);color:var(--ink);cursor:pointer}
 .seg button small{display:block;font-weight:400;font-size:.78rem;color:var(--muted);margin-top:2px}
 .seg button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
@@ -87,6 +88,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     <p class="label">Timer</p>
     <div class="seg" id="timeSeg">
       <button id="t60" data-v="60" aria-pressed="true">1 minute<small>like the real test</small></button>
+      <button id="t90" data-v="90" aria-pressed="false">1½ min<small>in between</small></button>
       <button id="t120" data-v="120" aria-pressed="false">2 minutes<small>warm-up</small></button>
     </div>
   </div>
@@ -178,6 +180,7 @@ function makeSet(only){
 
 let set=[],i=0,typed="",right=0,missed=[],timer=null,endAt=0,startAt=0,lock=null,running=false;
 function show(id){["home","run","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
+function secsLabel(s){return s===90?"1½ min":(s/60)+" min"}
 function fmt(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 
 async function start(only){
@@ -227,7 +230,7 @@ function finish(){
   $("score").textContent=right+"/30";
   const pct=Math.round(right/30*100);
   $("verdict").textContent=pct>=97?"Perfect paper!":pct>=90?"That's an A!":pct>=80?"Getting fast!":"Keep practicing!";
-  $("detail").textContent=pct+"% · "+(i>=30?"finished in "+used+"s":"time ran out at #"+(i+1))+" · "+(mode==="focus"?"6s to 9s":"all facts")+", "+(secs/60)+" min";
+  $("detail").textContent=pct+"% · "+(i>=30?"finished in "+used+"s":"time ran out at #"+(i+1))+" · "+(mode==="focus"?"6s to 9s":"all facts")+", "+secsLabel(secs);
   const ml=$("misses");ml.textContent="";
   const shown=missed.filter(m=>!m.blank);
   const blanks=missed.length-shown.length;
@@ -250,7 +253,7 @@ function renderHome(){
   recent.forEach(r=>{
     const row=document.createElement("div");row.className="row";
     const d=new Date(r.at);
-    const l=document.createElement("span");l.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(r.mode==="focus"?" ·6–9":"")+(r.secs===120?" ·2m":"");
+    const l=document.createElement("span");l.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(r.mode==="focus"?" ·6–9":"")+(r.secs===120?" ·2m":r.secs===90?" ·1½m":"");
     const bar=document.createElement("div");bar.className="bar";const fill=document.createElement("i");fill.style.width=(r.score/30*100)+"%";bar.appendChild(fill);
     const s=document.createElement("b");s.textContent=r.score+"/30";
     row.append(l,bar,s);h.appendChild(row);
