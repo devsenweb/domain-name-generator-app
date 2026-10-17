@@ -122,49 +122,59 @@ public class MainActivity extends Activity {
     }
 
     private void fetchUpdate() {
-        new Thread(() -> {
-            HttpURLConnection conn = null;
-            try {
-                // Cache-buster so the CDN hands back the newest file.
-                URL url = new URL(BuildConfig.UPDATE_URL + "?t=" + System.currentTimeMillis());
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-                conn.setUseCaches(false);
-                if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    Log.i(TAG, "Update check: HTTP " + conn.getResponseCode());
-                    return;
-                }
-                String html;
-                try (InputStream in = conn.getInputStream()) {
-                    html = readAll(in);
-                }
-                if (!looksLikeThePage(html)) {
-                    Log.w(TAG, "Downloaded file doesn't look like the app page; ignoring");
-                    return;
-                }
-                String current = readCachedHtml();
-                if (current == null) {
-                    current = readBundledHtml();
-                }
-                if (html.equals(current)) {
-                    return;
-                }
-                writeCache(html);
-                runOnUiThread(() -> {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                downloadUpdate();
+            }
+        }, "update-check").start();
+    }
+
+    private void downloadUpdate() {
+        HttpURLConnection conn = null;
+        try {
+            // Cache-buster so the CDN hands back the newest file.
+            URL url = new URL(BuildConfig.UPDATE_URL + "?t=" + System.currentTimeMillis());
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            conn.setUseCaches(false);
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                Log.i(TAG, "Update check: HTTP " + conn.getResponseCode());
+                return;
+            }
+            String html;
+            try (InputStream in = conn.getInputStream()) {
+                html = readAll(in);
+            }
+            if (!looksLikeThePage(html)) {
+                Log.w(TAG, "Downloaded file doesn't look like the app page; ignoring");
+                return;
+            }
+            String current = readCachedHtml();
+            if (current == null) {
+                current = readBundledHtml();
+            }
+            if (html.equals(current)) {
+                return;
+            }
+            writeCache(html);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
                     if (!isFinishing()) {
                         webView.evaluateJavascript(
                                 "window.mmUpdateReady && window.mmUpdateReady()", null);
                     }
-                });
-            } catch (Exception e) {
-                Log.i(TAG, "Update check failed (offline?)", e);
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
                 }
+            });
+        } catch (Exception e) {
+            Log.i(TAG, "Update check failed (offline?)", e);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
             }
-        }, "update-check").start();
+        }
     }
 
     private static boolean looksLikeThePage(String html) {
@@ -201,7 +211,12 @@ public class MainActivity extends Activity {
     private class AppBridge {
         @JavascriptInterface
         public void applyUpdate() {
-            runOnUiThread(MainActivity.this::loadPage);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    loadPage();
+                }
+            });
         }
 
         @JavascriptInterface
