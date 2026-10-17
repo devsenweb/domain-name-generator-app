@@ -1,0 +1,61 @@
+name: Mad Minute APK
+
+on:
+  push:
+    paths:
+      - "mad-minute/**"
+      - ".github/workflows/mad-minute-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mad-minute-apk
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mad-minute
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build signed APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk MadMinute.apk
+          ls -l MadMinute.apk
+
+      - name: Verify signature
+        run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          "$APKSIGNER" verify --print-certs MadMinute.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MadMinute-apk
+          path: mad-minute/MadMinute.apk
+
+      # A fixed release tag gives a stable download link for the phone:
+      # https://github.com/<owner>/<repo>/releases/download/mad-minute-latest/MadMinute.apk
+      - name: Publish to "mad-minute-latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete mad-minute-latest --yes --cleanup-tag || true
+          gh release create mad-minute-latest MadMinute.apk \
+            --target "$GITHUB_SHA" \
+            --title "Mad Minute (latest build)" \
+            --notes "Build #${GITHUB_RUN_NUMBER} from ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}. Open this page on the Android phone and tap MadMinute.apk to install." \
+            --prerelease
