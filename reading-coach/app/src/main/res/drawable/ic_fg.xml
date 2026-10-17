@@ -1,0 +1,6 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+  <!-- open book with a check mark -->
+  <path android:fillColor="#FFFFFF" android:pathData="M30,38c8,-3 16,-3 22,2v34c-6,-5 -14,-5 -22,-2z"/>
+  <path android:fillColor="#FFFFFF" android:pathData="M78,38c-8,-3 -16,-3 -22,2v34c6,-5 14,-5 22,-2z"/>
+  <path android:strokeColor="#F2B705" android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M60,58L66,64L76,50"/>
+</vector>
