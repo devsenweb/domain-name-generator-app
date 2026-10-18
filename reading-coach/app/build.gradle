@@ -1,0 +1,27 @@
+plugins { id 'com.android.application' }
+
+// The app pulls the latest index.html from this repo on every launch (self-updating).
+def updateUrl = "https://raw.githubusercontent.com/devsenweb/domain-name-generator-app/main/reading-coach/app/src/main/assets/index.html"
+
+android {
+    namespace 'com.dhil.readingcoach'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.dhil.readingcoach'
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'UPDATE_URL', "\"${updateUrl}\""
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs {
+        // Fixed key committed in the repo so every build can install over the last one
+        fixed { storeFile file('readingcoach.keystore'); storePassword 'readingcoach'; keyAlias 'readingcoach'; keyPassword 'readingcoach' }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.fixed }
+        release { minifyEnabled false; signingConfig signingConfigs.fixed }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
