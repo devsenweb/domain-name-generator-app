@@ -110,6 +110,25 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .tip{background:var(--green-bg);border-radius:12px;padding:12px;font-size:.92rem;line-height:1.5}
 .tip b{display:block;margin-bottom:4px}
 .tip p{margin:0 0 6px}.tip p:last-child{margin:0}
+/* learn */
+.lgroup{margin:0 0 16px}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lbtn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:12px;border-radius:12px;border:2px solid var(--edge);background:var(--card);font:600 .95rem var(--body);line-height:1.25;min-height:84px}
+.lbtn .li{font-size:1.3rem}
+.lbtn small{font-weight:400;color:var(--muted);font-size:.78rem}
+.lbtn .bar{width:100%;height:6px;margin-top:auto}
+.lbtn.seen{border-color:var(--green)}
+.lsTitle{font-family:var(--display);font-size:2.2rem;line-height:1;margin:0}
+.bigidea{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px;font-size:1.08rem;line-height:1.5;font-weight:600}
+.steps2{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px;line-height:1.5}
+.exs{display:flex;flex-direction:column;gap:10px}
+.ex{border-left:4px solid var(--accent);padding:4px 0 4px 12px}
+.ex .s{font-family:var(--read);font-size:1.1rem;line-height:1.6}
+.ex .n{font-size:.88rem;color:var(--muted);margin-top:2px;line-height:1.45}
+mark.a{background:var(--green-bg);color:inherit;border-bottom:3px solid var(--green);padding:0 .1em;border-radius:3px}
+mark.b{background:rgba(242,183,5,.28);background:color-mix(in srgb,var(--pencil) 30%,transparent);color:inherit;border-bottom:3px solid var(--pencil);padding:0 .1em;border-radius:3px}
+.keyrow{display:flex;flex-wrap:wrap;gap:10px;font-size:.85rem;margin:-2px 0 10px}
+.keyrow:empty{display:none}
 /* levels */
 .ladders{display:flex;flex-direction:column;gap:14px}
 .lad b{display:block;font-size:.95rem;margin-bottom:6px}
@@ -136,6 +155,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   <div class="menu">
     <button class="tile hot" id="goTest"><span class="ic">📝</span><span><b id="testTitle">Reading test · Level 1</b><small id="testSub"></small></span></button>
     <button class="tile hot" id="goGrammar"><span class="ic">✏️</span><span><b id="gramTitle">Grammar · Level 1</b><small id="gramSub"></small></span></button>
+    <button class="tile" id="goLearn"><span class="ic">📚</span><span><b>Learn the topics</b><small id="learnSub">Short lessons with examples, then try it yourself</small></span></button>
     <button class="tile" id="goMiss"><span class="ic">🔁</span><span><b>Fix my mistakes</b><small id="missSub">Questions you missed come back here</small></span></button>
   </div>
   <div class="panel">
@@ -161,6 +181,26 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   </div>
 </div>
 
+<div class="wrap" id="learn" hidden>
+  <div class="top"><h2 style="font-family:var(--display);font-size:2rem">Learn</h2><button class="ghost" id="learnBack">Home</button></div>
+  <p class="muted">Read a lesson, try 2 questions, then practice. Red bars show the skills to learn first.</p>
+  <div id="learnList"></div>
+</div>
+
+<div class="wrap" id="lesson" hidden>
+  <div class="top"><span class="label" id="lsGroup" style="margin:0">Grammar</span><button class="ghost" id="lessonBack">All lessons</button></div>
+  <h2 class="lsTitle" id="lsTitle"></h2>
+  <div class="bigidea" id="lsBig"></div>
+  <div class="panel"><p class="label">How it works</p><ul class="steps2" id="lsSteps"></ul></div>
+  <div class="panel"><p class="label">Examples</p><div class="keyrow" id="lsKey"></div><div class="exs" id="lsEx"></div></div>
+  <div class="tip" id="lsTest"></div>
+  <div class="btns">
+    <button class="go" id="lsTry">Try it</button>
+    <button class="ghost" id="lsPractice">Practice</button>
+  </div>
+  <button class="ghost" id="lsNext">Next lesson →</button>
+</div>
+
 <div class="wrap" id="quiz" hidden>
   <div class="top"><b id="qcount">1 / 6</b><button class="ghost" id="quit">Stop</button></div>
   <div class="prog"><i id="qprog" style="width:0"></i></div>
@@ -181,6 +221,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   </div>
   <div class="levelup" id="levelup" hidden></div>
   <div class="tip" id="tip" hidden></div>
+  <button class="ghost" id="tipLearn" hidden></button>
   <p class="label" id="revLabel">Look again</p>
   <div class="rev" id="rev"></div>
   <div class="btns">
@@ -309,6 +350,168 @@ const TIPS={
 // Original passages written in the style of the Wonders Grade 4 Unit 1 weekly tests
 // (realistic fiction, folktale, biography, expository). Paragraphs are numbered like the test.
 // q.para highlights that paragraph while the question is open.
+// Learn section: one short lesson per skill. In lesson text, *x* is the green mark and ~x~ the yellow mark;
+// key explains what each color means for that lesson. try = quick check questions (same format as the quizzes).
+const LESSONS=[
+{id:"types",group:"Grammar",skill:"Kinds of sentences",icon:"💬",
+ big:"Every sentence has a job: it tells, asks, commands, or shows strong feeling. And every sentence needs a WHO and a WHAT HAPPENED.",
+ steps:["*Statement* tells something. It ends with a period (.)","*Question* asks something. It ends with a question mark (?)","*Command* tells someone to DO something. The subject *you* is hidden. It ends with . or !","*Exclamation* shows strong feeling. It ends with !","A *fragment* is missing the WHO or the WHAT HAPPENED. It is only part of a sentence."],
+ examples:[["The bus is late.","Statement: it tells."],["Is the bus late?","Question: it asks."],["Wait by the door.","Command: (You) wait by the door."],["Wow, the bus is SO late!","Exclamation: strong feeling."],["Waiting by the door.","Fragment ✗ Who is waiting? Fix: *We are* waiting by the door."]],
+ test:"Commands can end with ! too (*Stop!*). Ask: is it telling someone to DO something? Then it's a command, even with !",
+ try:[
+  {type:"mc",q:"What kind of sentence is this?",sent:"Put your shoes by the door, please.",choices:["Statement","Question","Command","Exclamation"],keep:1,a:2,why:"It tells someone to do something. The hidden subject is *you*."},
+  {type:"mc",q:"Which one is a fragment?",choices:["The puppy barked.","After the long game.","Sit down.","We won!"],a:1,why:"*After the long game* has no WHO and no WHAT HAPPENED. *Sit down* is a command, so it is complete."}
+ ]},
+{id:"subjpred",group:"Grammar",skill:"Subjects & predicates",icon:"🧩",
+ big:"The subject is WHO or WHAT the sentence is about. The predicate tells what the subject DOES or IS.",
+ key:[["~","Subject"],["*","Predicate"]],
+ steps:["Find the verb (the action word) first.","Ask: *Who or what* did that? The answer is the subject.","The *complete* subject has all its describing words. The *simple* subject is just the main word.","Two subjects joined with *and* = compound subject. Two verbs for the same subject = compound predicate."],
+ examples:[["~The hungry bear~ *searched for berries.*","Simple subject: *bear*. Simple predicate: *searched*."],["~My cousin and I~ *built a sandcastle.*","Compound subject: two people did it."],["~Leo~ *ran to the net and kicked the ball.*","Compound predicate: Leo did two things."],["*Under the bridge slept* ~a tiny troll~.","Tricky! Ask *Who slept?* The subject can come at the end."]],
+ test:"If the sentence starts with a place or time (*Every summer, …*), skip it. It is not the subject. Find the verb and ask who did it.",
+ try:[
+  {type:"tap",q:"Tap the complete subject.",parts:["The noisy blue jay","woke everyone up","at sunrise."],a:0,why:"Who woke everyone up? *The noisy blue jay*."},
+  {type:"mc",q:"Which sentence has a compound PREDICATE?",choices:["Mom and Dad cooked.","The cat stretched and yawned.","The cat is orange.","Sam and the cat slept."],a:1,why:"One subject (*the cat*) did two things: *stretched* and *yawned*."}
+ ]},
+{id:"compound",group:"Grammar",skill:"Compound sentences",icon:"🔗",
+ big:"A compound sentence joins TWO complete sentences with a comma and a joining word.",
+ key:[["~","Sentence 1 and sentence 2"],["*","Comma + joining word"]],
+ steps:["Sentence + *, joining word* + sentence.","The joining words are FANBOYS: for, and, nor, but, or, yet, so.","*and* adds · *but / yet* = opposite or surprise · *or* = choice · *so* = result","The comma goes BEFORE the joining word.","Only use the comma if BOTH sides are full sentences."],
+ examples:[["~I was tired~*, so* ~I went to bed early.~","Going to bed is the result, so use *so*."],["~The game was hard~*, but* ~we won.~","Surprise or opposite, so use *but*."],["~We can walk~*, or* ~we can ride bikes.~","A choice, so use *or*."],["I ran and jumped.","NOT compound. *jumped* has no new subject, so no comma."]],
+ test:"Check each side of the joining word. Can it stand alone as a sentence? Two yeses = compound, so use a comma.",
+ try:[
+  {type:"mc",q:"Choose the best joining word.",sent:"The store was closed, ___ we went home.",choices:["but","or","so","yet"],keep:1,a:2,why:"Going home is the RESULT of the store being closed, so use *so*."},
+  {type:"mc",q:"Which sentence is punctuated correctly?",choices:["I knocked, and nobody answered.","I knocked and, nobody answered.","I knocked, and waited.","I, knocked and nobody answered."],a:0,why:"Both sides are full sentences, so the comma goes right before *and*. In choice C, *waited* has no subject, so no comma."}
+ ]},
+{id:"complex",group:"Grammar",skill:"Complex sentences",icon:"🧠",
+ big:"A complex sentence has one part that CAN stand alone (independent clause) and one part that CAN'T (dependent clause).",
+ key:[["~","Independent: can stand alone"],["*","Dependent: can't stand alone"]],
+ steps:["Dependent clauses start with words like: after, although, as, when, while, until, because, before, if, since, unless. (Remember AAAWWUBBIS.)","Dependent part FIRST → put a comma after it.","Dependent part LAST → usually no comma.","Pick the word that matches the meaning: *because* = reason · *although* = surprise · *when / after / before / until* = time · *if / unless* = condition"],
+ examples:[["*Because it rained,* ~the game was canceled.~","Dependent first, so add a comma."],["~The game was canceled~ *because it rained.*","Dependent last, so no comma."],["*Although she was tired,* ~Ivana finished her book.~","Tired but still finished: a surprise, so use *although*."],["~You can't play~ *unless you finish your homework.*","*unless* means *if not*."]],
+ test:"Cover one part with your finger. If the other part still sounds like a sentence, it is independent. *Because it rained.* alone is a fragment, so it's dependent.",
+ try:[
+  {type:"tap",q:"Tap the DEPENDENT clause.",parts:["When the bell rang,","we lined up."],a:0,why:"*When the bell rang* can't stand alone. It starts with *when*."},
+  {type:"mc",q:"Choose the best word.",sent:"___ I studied hard, the test was still tricky.",choices:["Because","Although","If","Until"],a:1,why:"Studying hard but still finding it tricky is a surprise, so use *Although*."}
+ ]},
+{id:"runon",group:"Grammar",skill:"Run-ons & fixing sentences",icon:"🛠️",
+ big:"A run-on smushes two sentences together. A fragment is only half a sentence. Both need fixing.",
+ steps:["Run-on: *We went to the park we played tag.*","Fix 1, a period: *We went to the park. We played tag.*","Fix 2, comma + FANBOYS: *We went to the park, and we played tag.*","Fix 3, a dependent word: *When we went to the park, we played tag.*","A comma ALONE is not enough. That mistake is called a comma splice."],
+ examples:[["My dog loves bones he buries them.","✗ Run-on: two sentences with nothing between them."],["My dog loves bones, he buries them.","✗ Comma splice: only a comma."],["My dog loves bones, *so* he buries them.","✓ Fixed with *, so*"],["Because he loves bones.","✗ Fragment. Fix: *He buries them because he loves bones.*"]],
+ test:"Read it out loud. If you have to take a breath in the middle where a new sentence starts, it's probably a run-on.",
+ try:[
+  {type:"mc",q:"Is this a complete sentence, a fragment, or a run-on?",sent:"The sun came out we went swimming.",choices:["Complete sentence","Fragment","Run-on"],keep:1,a:2,why:"Two sentences, *The sun came out* and *we went swimming*, with nothing joining them."},
+  {type:"mc",q:"Which is the best fix?",sent:"I finished my book I started a new one.",choices:["I finished my book, I started a new one.","I finished my book, so I started a new one.","I finished my book I, started a new one.","I finished. My book I started a new one."],a:1,why:"Comma + *so* joins the two sentences correctly. Choice A is a comma splice."}
+ ]},
+{id:"evidence",group:"Reading",skill:"Text evidence",icon:"🔎",
+ big:"Text evidence is the sentence from the story that PROVES your answer. On the test, Part B asks for it.",
+ steps:["Answer Part A first.","Go back to the story. Find where it talks about your Part A answer.","For Part B, pick the sentence that says the SAME idea as your Part A answer.","Wrong Part B choices are often true sentences from the story, but they prove something else."],
+ examples:[["Part A: How does Nora feel? → *disappointed*","Part B: ~\"Nora slumped in her chair.\"~ proves it. Slumping shows she's sad."],["~\"She painted a sign.\"~","This is a true sentence, but it doesn't prove she's disappointed."]],
+ test:"Read your Part A answer, then each Part B choice, and ask: *Does this sentence PROVE that?* Pick the one that does. If Part B says *Choose TWO*, you need two sentences that both prove it.",
+ try:[
+  {type:"ab",a:{q:"Read: \"Maya hugged the trophy and couldn't stop smiling. She had practiced every day for a year.\" How does Maya feel?",choices:["Proud and happy","Bored","Angry","Scared"],a:0},b:{q:"Which words BEST support your answer to Part A?",choices:["\"couldn't stop smiling\"","\"for a year\"","\"every day\"","\"the trophy\""],a:0},why:"*Couldn't stop smiling* is the clue that shows she is happy and proud."},
+  {type:"mc",q:"Read: \"Ben checked the weather twice and packed an umbrella, a raincoat and boots.\" Which word BEST describes Ben?",choices:["Careless","Prepared","Silly","Sleepy"],a:1,why:"Checking twice and packing rain gear shows he is *prepared*. The evidence is everything he packed."}
+ ]},
+{id:"mainidea",group:"Reading",skill:"Main idea & details",icon:"🎯",
+ big:"The main idea is what the WHOLE passage or paragraph is mostly about. Details are the facts that support it.",
+ steps:["Ask: *What is this mostly about?*","Look at the title, the first sentence and the last sentence.","The main idea is BIG enough to cover every paragraph.","Wrong answers are usually one small detail, or something the passage never says."],
+ examples:[["*Bats eat insects. Bats spread seeds. Bats carry pollen.*","Main idea: ~Bats are helpful animals.~ Each sentence is a detail."],["\"Bats eat mosquitoes.\"","True, but too small to be the main idea."]],
+ test:"Try each answer as a title for the passage. The one that fits ALL of it is the main idea.",
+ try:[
+  {type:"mc",q:"What is the main idea?",sent:"Penguins can't fly, but they are amazing swimmers. Their wings work like flippers. Their bodies are shaped like torpedoes. Some can dive deeper than 1,500 feet.",choices:["Penguins can't fly.","Penguins are built to be great swimmers.","Some penguins dive 1,500 feet.","Penguins have wings."],a:1,why:"Every sentence explains how penguins swim well. The others are single details."},
+  {type:"mc",q:"Which detail SUPPORTS this main idea: \"Recess is important for students\"?",choices:["Recess is usually outside.","Playing helps students focus better in class.","Some schools have two lunches.","Swings are fun."],a:1,why:"It explains WHY recess is important. The others don't support the idea."}
+ ]},
+{id:"context",group:"Reading",skill:"Context clues",icon:"🔤",
+ big:"When you don't know a word, the words AROUND it give you clues.",
+ steps:["Reread the sentence before, the sentence with the word, and the sentence after.","Look for a definition (*erode, or wear away*), a synonym (*boasted… bragged*), an antonym (*not murky but clear*), or an example.","Put each answer choice in place of the word. Pick the one that makes sense."],
+ examples:[["The water was *murky*, but after the filter it came out ~much clearer~.","Antonym clue: murky is the opposite of clear, so it means dark and dirty."],["Glaciers *erode*, ~or wear away~, rock.","Definition clue: the meaning comes right after *or*."],["Cheetah *boasted*. Eagle ~bragged~, too.","Synonym clue: boasted = bragged."]],
+ test:"Never pick an answer just because it's a word you know. Swap it into the sentence and check that the sentence still makes sense.",
+ try:[
+  {type:"mc",q:"What does *exhausted* mean?",sent:"After running the whole race, Leo was *exhausted*. He lay on the grass and didn't move for ten minutes.",choices:["Very tired","Very hungry","Excited","Angry"],a:0,why:"He ran a whole race and couldn't move. Those clues mean very tired."},
+  {type:"mc",q:"What does *fragile* mean?",sent:"Be careful with that vase. It is *fragile* and could break if you drop it.",choices:["Heavy","Easy to break","Expensive","Colorful"],a:1,why:"*Could break if you drop it* is the clue."}
+ ]},
+{id:"theme",group:"Reading",skill:"Theme",icon:"💡",
+ big:"The theme is the LESSON or big message of a story, something true about life, not just this story.",
+ steps:["Ask: *What did the main character learn?*","Look at how the problem was solved.","Check the ending. Characters often say the lesson out loud.","A theme is a full sentence about life: *Don't give up.* · *Actions matter more than words.*"],
+ examples:[["Turtle keeps walking while the others brag. He brings the rain.","Theme: ~Actions matter more than words.~"],["\"Hard work.\"","Not a theme by itself. It's only a topic. Say what ABOUT it: *Hard work pays off.*"]],
+ test:"Wrong answers are often something that HAPPENED in the story (*It rained*). A theme is a lesson you could use in your own life.",
+ try:[
+  {type:"mc",q:"What is the theme?",sent:"Ana wanted to quit piano because the song was hard. Her teacher said, \"Practice a little each day.\" Ana did. At the recital, she played the whole song without a mistake.",choices:["Recitals are fun.","Piano is hard.","Practice helps you reach your goals.","Teachers are smart."],a:2,why:"Ana learned that practicing a little each day helped her succeed."},
+  {type:"mc",q:"Which is written like a theme?",choices:["Friendship","Real friends help each other, even when it's hard.","Two friends go to the park.","The friends were named Sam and Max."],a:1,why:"A theme is a lesson about life written as a sentence. *Friendship* alone is just a topic."}
+ ]},
+{id:"character",group:"Reading",skill:"Character",icon:"🧒",
+ big:"You learn about a character from what they DO, SAY, THINK and FEEL, and how others react to them.",
+ steps:["Look at actions: what does the character do?","Look at words and thoughts: what does the character say or think?","Use those clues to pick a trait word: brave, selfish, determined, curious…","Notice if the character CHANGES from the beginning to the end."],
+ examples:[["Even when his legs ached, ~he rested only a little, then kept going~.","Trait: *determined*."],["The merchant ~shouted, blamed the king, and went around the stone~.","Trait: *selfish*."]],
+ test:"Pick the trait you can PROVE with a sentence. If you can't point to the proof, it's probably wrong.",
+ try:[
+  {type:"mc",q:"Which word BEST describes Jin?",sent:"Jin saw a younger kid drop her lunch tray. He helped pick everything up and shared his apple with her.",choices:["Rude","Kind","Lazy","Shy"],a:1,why:"Helping and sharing are kind actions."},
+  {type:"mc",q:"How does Rosa CHANGE?",sent:"At first Rosa refused to try the climbing wall. She watched her friends for a long time. Finally she clipped in, climbed slowly, and rang the bell at the top.",choices:["From scared to brave","From happy to sad","From brave to scared","She doesn't change"],a:0,why:"She refused at first (scared) and then climbed to the top (brave)."}
+ ]},
+{id:"sequence",group:"Reading",skill:"Sequence",icon:"🔢",
+ big:"Sequence is the ORDER events happen in.",
+ steps:["Look for time words: first, next, then, later, after, before, finally, meanwhile, that afternoon, the next morning.","Dates in a biography help too (1811 comes before 1833).","For *right after* questions, find the event, then look at what comes next."],
+ examples:[["~That afternoon~, Nora moved her stand. ~The next morning~, runners lined up.","Time words show the order."],["\"Before he died, her father taught her.\"","Careful: *before* means it happened EARLIER, even though it's written later."]],
+ test:"Watch out for *before* and *after*. The order the author writes things isn't always the order they happened.",
+ try:[
+  {type:"mc",q:"What happened FIRST?",sent:"After lunch, Max fed the fish. Before lunch, he cleaned the tank. At bedtime, he read about fish.",choices:["Max fed the fish.","Max cleaned the tank.","Max read about fish.","Max ate lunch."],a:1,why:"*Before lunch* is the earliest time in the paragraph."},
+  {type:"mc",q:"What happened right AFTER the seeds sprouted?",sent:"Kai planted seeds in May. In June the seeds sprouted. Then Kai added sticks so the vines could climb. In August he picked beans.",choices:["Kai planted seeds.","Kai added sticks.","Kai picked beans.","It rained."],a:1,why:"*Then Kai added sticks* comes right after they sprouted."}
+ ]},
+{id:"cause",group:"Reading",skill:"Cause & effect",icon:"➡️",
+ big:"A cause is WHY something happens. An effect is WHAT happens.",
+ key:[["~","Cause (why)"],["*","Effect (what happened)"]],
+ steps:["Ask *Why did this happen?* to find the cause.","Ask *What happened because of it?* to find the effect.","Clue words: because, so, since, as a result, therefore, due to, that's why.","One cause can have more than one effect."],
+ examples:[["~Because it rained all night~, *the field was muddy*.","Cause, then effect."],["*The game was canceled* ~due to the storm~.","The effect can come first!"]],
+ test:"Read the question carefully. Is it asking for the cause (WHY) or the effect (WHAT HAPPENED)? Mixing those up is the most common mistake.",
+ try:[
+  {type:"mc",q:"What is the CAUSE?",sent:"Lila forgot to water her plant for two weeks, so its leaves turned brown.",choices:["The leaves turned brown.","Lila forgot to water the plant.","The plant grew.","Two weeks passed."],a:1,why:"WHY did the leaves turn brown? Because she forgot to water it."},
+  {type:"mc",q:"What is the EFFECT?",sent:"The power went out during the storm. As a result, we ate dinner by candlelight.",choices:["The storm","The power went out","We ate by candlelight","Dinner was late"],a:2,why:"*As a result* points to the effect: eating by candlelight."}
+ ]},
+{id:"problem",group:"Reading",skill:"Problem & solution",icon:"🗝️",
+ big:"Most stories have a PROBLEM the character must solve and a SOLUTION that fixes it.",
+ steps:["The problem is usually at the beginning: what does the character want or need?","Notice the attempts, including ones that don't work.","The solution is how the problem finally gets fixed."],
+ examples:[["Nora needs $25 but has $11.","~Problem~"],["Her first stand doesn't work. Then she moves it to the runners' trail.","~Solution~: a new place with more customers."]],
+ test:"If a question asks how the problem was solved, find the turning point: the moment something changes.",
+ try:[
+  {type:"mc",q:"What is the problem?",sent:"Theo's kite kept crashing. He noticed the tail was too short, so he added a long ribbon. The kite flew high.",choices:["Theo's kite kept crashing.","Theo added a ribbon.","The kite flew high.","Theo went to the park."],a:0,why:"The problem is what goes wrong: the kite kept crashing."},
+  {type:"mc",q:"What is the solution?",sent:"Theo's kite kept crashing. He noticed the tail was too short, so he added a long ribbon. The kite flew high.",choices:["The kite crashed.","He added a long ribbon to the tail.","The tail was short.","He bought a new kite."],a:1,why:"Adding a ribbon fixed the problem."}
+ ]},
+{id:"pov",group:"Reading",skill:"Point of view",icon:"👀",
+ big:"Point of view is WHO is telling the story, or how the AUTHOR feels about a topic.",
+ steps:["*First person*: the narrator is IN the story and uses *I, me, we*.","*Third person*: the narrator is outside the story and uses *he, she, they*, plus names.","Words like *I* inside quotation marks don't count. That is a character talking.","In nonfiction, the author's point of view is their opinion. Look for words like *helpful, amazing, should*."],
+ examples:[["~I~ grabbed ~my~ backpack and ran.","First person."],["Dev grabbed ~his~ backpack and ran.","Third person."],["\"Bats are good neighbors to have.\"","The author's point of view: bats are helpful."]],
+ test:"Ignore the dialogue and look at the narrator's words. *I* outside quotation marks means first person.",
+ try:[
+  {type:"mc",q:"What point of view is this?",sent:"Mia looked at the test and smiled. She knew every answer.",choices:["First person","Third person"],keep:1,a:1,why:"The narrator uses *Mia* and *she*. That is third person."},
+  {type:"mc",q:"What is the author's point of view?",sent:"Every kid should learn to swim. Swimming keeps you safe, makes you strong, and is tons of fun.",choices:["Swimming is dangerous.","Learning to swim is important.","Kids don't like swimming.","Pools are expensive."],a:1,why:"*Every kid should learn* shows the author's opinion."}
+ ]},
+{id:"purpose",group:"Reading",skill:"Author's purpose",icon:"✍️",
+ big:"Why did the author write this? To Persuade, Inform or Entertain (PIE). On harder questions: why did the author include THIS part?",
+ steps:["*Persuade*: tries to change your mind (should, best, must).","*Inform*: teaches facts (biographies, science articles).","*Entertain*: tells a story.","For *Why did the author include…?*, ask what that part ADDS: a picture in your head, an example, a contrast, a problem being set up."],
+ examples:[["A biography of Mary Anning","~Inform~"],["\"Rocks scrape the ground like giant sandpaper.\"","Why? To help you picture how glaciers wear rock away."]],
+ test:"For *why did the author include this detail*, the answer connects that detail to the main point. It's never *to make the story longer*.",
+ try:[
+  {type:"mc",q:"What is the author's purpose?",sent:"Our town needs a new skate park. Kids need a safe place to play, and it would bring families together. Please vote YES!",choices:["To inform","To persuade","To entertain"],keep:1,a:1,why:"*Needs*, *Please vote YES!*: the author is trying to change your mind."},
+  {type:"mc",q:"Why does the author include the last sentence?",sent:"Octopuses have no bones. They can squeeze through any hole bigger than their beak. One octopus escaped its aquarium tank through a tiny drain pipe!",choices:["To give an amazing example of how they squeeze through small spaces","To explain what octopuses eat","To persuade you to buy an octopus","To describe the ocean"],a:0,why:"The escape story is an example that proves the fact before it."}
+ ]},
+{id:"compare",group:"Reading",skill:"Compare & contrast",icon:"⚖️",
+ big:"Compare = how things are ALIKE. Contrast = how they are DIFFERENT.",
+ steps:["Alike clue words: both, also, too, like, similar, same.","Different clue words: but, however, unlike, instead, while, on the other hand.","For *how is the end different from the beginning*, reread the first and last paragraphs."],
+ examples:[["~Both~ owls and hawks hunt small animals.","Compare (alike)."],["Owls hunt at night, ~but~ hawks hunt during the day.","Contrast (different)."]],
+ test:"Make sure your answer is true for the RIGHT thing. Wrong choices often switch the two things around.",
+ try:[
+  {type:"mc",q:"How are frogs and toads DIFFERENT?",sent:"Frogs and toads are both amphibians. Frogs have smooth, wet skin and long legs for jumping. Toads, however, have dry, bumpy skin and shorter legs for walking.",choices:["Both are amphibians.","Frogs have smooth skin, but toads have bumpy skin.","Both have long legs.","Toads jump farther than frogs."],a:1,why:"*However* signals the difference: smooth skin vs. bumpy skin."},
+  {type:"mc",q:"How are frogs and toads ALIKE?",sent:"Frogs and toads are both amphibians. Frogs have smooth, wet skin and long legs for jumping. Toads, however, have dry, bumpy skin and shorter legs for walking.",choices:["They are both amphibians.","They both have bumpy skin.","They both have short legs.","They both have wet skin."],a:0,why:"*Both* signals the way they are alike."}
+ ]},
+{id:"figurative",group:"Reading",skill:"Figurative language",icon:"🎨",
+ big:"Figurative language means MORE than the exact words say. It helps you picture or feel something.",
+ steps:["*Simile*: compares with *like* or *as*. *Fast as lightning.*","*Metaphor*: says one thing IS another. *The classroom was a zoo.*","*Hyperbole*: a huge exaggeration. *I've told you a million times.*","*Personification*: gives human actions to things. *The wind whispered.*","Ask: what does it REALLY mean?"],
+ examples:[["Her voice was ~as soft as a feather~.","Simile: her voice was gentle and quiet."],["\"You're slower than a melting rock!\"","Hyperbole: very, very slow."],["The audience was ~roaring~.","They were laughing very loudly, not actually roaring like lions."]],
+ test:"Pick the answer that explains the MEANING, not the one that takes the words literally (lions, rocks, feathers).",
+ try:[
+  {type:"mc",q:"What does this mean?",sent:"My backpack weighs a ton!",choices:["The backpack weighs 2,000 pounds.","The backpack is very heavy.","The backpack is empty.","The backpack is new."],a:1,why:"It's hyperbole, an exaggeration. It means very heavy."},
+  {type:"mc",q:"Which one is a simile?",choices:["The snow was a white blanket.","The snow fell like cotton balls.","The snow danced in the wind.","It snowed a lot."],a:1,why:"It uses *like* to compare. Choice A is a metaphor, and choice C is personification."}
+ ]}
+];
+
 const STORIES=[
 {id:"lemon",lvl:1,title:"The Lemonade Problem",genre:"Realistic fiction",text:[
  "Nora had been saving for a new bike helmet for three weeks, but her jar held only eleven dollars. The helmet she wanted cost twenty-five. \"At this rate, I'll be in fifth grade before I can ride to school,\" she grumbled.",
@@ -535,10 +738,12 @@ const fmt=s=>esc(s).replace(/\*([^*]+)\*/g,"<em>$1</em>");
 const ALL={};
 STORIES.forEach(s=>{s.lvl=s.lvl||1;s.qs.forEach((q,i)=>{q.id=s.id+"."+i;q.story=s.id;ALL[q.id]=q})});
 GRAMMAR.forEach(t=>t.qs.forEach((q,i)=>{q.id="g."+t.id+"."+i;q.skill=q.skill||t.name;q.topic=t.id;q.lvl=q.lvl||1;ALL[q.id]=q}));
+LESSONS.forEach(l=>l.try.forEach((q,i)=>{q.id="l."+l.id+"."+i;q.skill=l.skill;q.lesson=l.id;ALL[q.id]=q}));
+const lessonBySkill=Object.fromEntries(LESSONS.map(l=>[l.skill,l]));
 const storyById=Object.fromEntries(STORIES.map(s=>[s.id,s]));
 const topicById=Object.fromEntries(GRAMMAR.map(t=>[t.id,t]));
 
-function show(id){["home","quiz","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
+function show(id){["home","learn","lesson","quiz","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
 
 // ---------- session ----------
 let S=null; // {kind,track,lvl,counts,name,items:[q],i,right,wrong:[],hl,test}
@@ -570,14 +775,27 @@ function startGrammar(lvl){
   S={kind:"grammar",track:"gram",lvl,counts:true,name:"Grammar level "+lvl,items:shuffle(pickWeighted(pool,L.n,q=>L.mix[q.lvl])),i:0,right:0,wrong:[],test:L.test};
   begin();
 }
-function startTopic(topicId){
+function startTopic(topicId,fromLesson){
   // topic practice: her current grammar level and below, never counts toward a level
   const t=topicById[topicId], lvl=st.lv.gram.cur;
   let pool=t.qs.filter(q=>q.lvl<=lvl);
   if(pool.length<6)pool=t.qs.filter(q=>q.lvl<=Math.max(lvl,2));
-  S={kind:"topic",track:"gram",lvl,counts:false,name:t.name,topic:topicId,items:shuffle(pickWeighted(pool,10,q=>q.lvl===lvl?2:1)),i:0,right:0,wrong:[],test:false};
+  S={kind:"topic",track:"gram",lvl,counts:false,name:t.name,topic:topicId,lesson:fromLesson,items:shuffle(pickWeighted(pool,10,q=>q.lvl===lvl?2:1)),i:0,right:0,wrong:[],test:false};
   begin();
 }
+function startSkill(skill,fromLesson){
+  // reading-skill practice from the stories she has unlocked (Text evidence = the Part A/B questions)
+  const match=q=>q.skill===skill||(skill==="Text evidence"&&q.type==="ab");
+  let pool=storiesFor([1,2,3].filter(n=>n<=st.lv.read.top)).flatMap(s=>s.qs).filter(match);
+  if(pool.length<4)pool=STORIES.flatMap(s=>s.qs).filter(match);
+  S={kind:"skill",counts:false,name:skill,lesson:fromLesson,items:shuffle(pickWeighted(pool,6)),i:0,right:0,wrong:[],hl:true,test:false};
+  begin();
+}
+function startTry(l){
+  S={kind:"try",counts:false,name:"Try it: "+l.skill,lesson:l.id,items:l.try.slice(),i:0,right:0,wrong:[],hl:true,test:false};
+  begin();
+}
+function practice(l){if(l.group==="Grammar")startTopic(l.id,l.id);else startSkill(l.skill,l.id)}
 function startMisses(){
   const ids=Object.keys(st.miss).filter(id=>ALL[id]);
   if(!ids.length)return;
@@ -754,6 +972,10 @@ function finish(){
   const missedSkills={};S.wrong.forEach(w=>{missedSkills[w.q.skill]=(missedSkills[w.q.skill]||0)+1});
   const top=Object.entries(missedSkills).sort((a,b)=>b[1]-a[1])[0];
   if(top&&TIPS[top[0]]){tip.hidden=false;tip.innerHTML="<b>Tip: "+esc(top[0])+"</b>"+TIPS[top[0]].map(t=>"<p>"+fmt(t)+"</p>").join("")}
+  const tl=$("tipLearn"),ls=top&&lessonBySkill[top[0]];
+  tl.hidden=!ls||S.kind==="try";if(ls){tl.textContent="📚 Learn: "+ls.skill;tl.onclick=()=>openLesson(ls.id)}
+  $("again").textContent=S.kind==="try"?"Practice more":"Another one";
+  $("home2").textContent=S.lesson?"Back to lesson":"Home";
   const rv=$("rev");rv.textContent="";
   $("revLabel").textContent=S.wrong.length?"Look again":"No mistakes this time";
   S.wrong.forEach(w=>{const d=document.createElement("div");d.className="rv";
@@ -764,14 +986,64 @@ function finish(){
   show("done");renderHome();
 }
 $("again").onclick=()=>{
-  if(S.kind==="story")startReading(st.lv.read.cur);
+  if(S.kind==="try")practice(lessonById[S.lesson]);
+  else if(S.kind==="skill")startSkill(S.name,S.lesson);
+  else if(S.kind==="story")startReading(st.lv.read.cur);
   else if(S.kind==="grammar")startGrammar(st.lv.gram.cur);
-  else if(S.kind==="topic")startTopic(S.topic);
+  else if(S.kind==="topic")startTopic(S.topic,S.lesson);
   else if(Object.keys(st.miss).length)startMisses();else show("home");
 };
-$("home2").onclick=()=>show("home");
-$("quit").onclick=()=>show("home");
-window.goBack=()=>{if(!$("home").hidden)return"exit";show("home");return"nav"};
+const leave=()=>{if(S&&S.lesson)openLesson(S.lesson);else show("home")};
+$("home2").onclick=leave;
+$("quit").onclick=leave;
+window.goBack=()=>{
+  if(!$("home").hidden)return"exit";
+  if(!$("lesson").hidden)openLearn();else if(!$("learn").hidden)show("home");else leave();
+  return"nav";
+};
+
+// ---------- learn ----------
+const lessonById=Object.fromEntries(LESSONS.map(l=>[l.id,l]));
+st.learned=st.learned||{};
+// lesson text: *x* = green mark, ~x~ = yellow mark
+const fmtL=t=>esc(t).replace(/\*([^*]+)\*/g,"<mark class='a'>$1</mark>").replace(/~([^~]+)~/g,"<mark class='b'>$1</mark>");
+function openLearn(){
+  const box=$("learnList");box.textContent="";
+  ["Grammar","Reading"].forEach(g=>{
+    const sec=document.createElement("div");sec.className="lgroup";
+    sec.innerHTML="<p class='label'>"+(g==="Grammar"?"Grammar":"Reading skills")+"</p>";
+    const grid=document.createElement("div");grid.className="lgrid";
+    // weakest skills first, then ones she hasn't practiced, in lesson order
+    LESSONS.filter(l=>l.group===g).map((l,i)=>[l,acc(l.skill,null),i]).sort((a,b)=>(a[1]===null?.75:a[1])-(b[1]===null?.75:b[1])||a[2]-b[2]).forEach(([l,a])=>{
+      const b=document.createElement("button");b.className="lbtn"+(st.learned[l.id]?" seen":"");
+      const pct=a===null?null:Math.round(a*100);
+      b.innerHTML="<span class='li'>"+l.icon+"</span>"+esc(l.skill)+"<small>"+(st.learned[l.id]?"✓ Read":"New")+(pct===null?"":" · "+pct+"% right")+"</small>"+
+        (pct===null?"":"<span class='bar'><i class='"+(pct<70?"lo":pct<85?"mid":"")+"' style='width:"+pct+"%'></i></span>");
+      b.onclick=()=>openLesson(l.id);grid.appendChild(b)});
+    sec.appendChild(grid);box.appendChild(sec)});
+  show("learn");
+}
+function openLesson(id){
+  const l=lessonById[id];
+  st.learned[id]=true;save();
+  $("lsGroup").textContent=l.group==="Grammar"?"Grammar lesson":"Reading skill";
+  $("lsTitle").textContent=l.icon+" "+l.skill;
+  $("lsBig").innerHTML=fmtL(l.big);
+  $("lsSteps").innerHTML=l.steps.map(t=>"<li>"+fmtL(t)+"</li>").join("");
+  $("lsKey").innerHTML=(l.key||[]).map(([m,t])=>fmtL(m+t+m)).join("");
+  $("lsEx").innerHTML=l.examples.map(([a,n])=>"<div class='ex'><div class='s'>"+fmtL(a)+"</div><div class='n'>"+fmtL(n)+"</div></div>").join("");
+  $("lsTest").innerHTML="<b>On the test</b><p>"+fmtL(l.test)+"</p>";
+  $("lsTry").textContent="Try it ("+l.try.length+" questions)";
+  $("lsTry").onclick=()=>startTry(l);
+  $("lsPractice").textContent=l.group==="Grammar"?"Practice 10":"Practice in stories";
+  $("lsPractice").onclick=()=>practice(l);
+  const i=LESSONS.indexOf(l),nx=LESSONS[(i+1)%LESSONS.length];
+  $("lsNext").textContent="Next lesson: "+nx.skill+" →";$("lsNext").onclick=()=>openLesson(nx.id);
+  show("lesson");
+}
+$("goLearn").onclick=openLearn;
+$("learnBack").onclick=()=>show("home");
+$("lessonBack").onclick=openLearn;
 
 // ---------- home ----------
 function acc(skill,dflt){const k=st.skill[skill];return k&&k.t?k.r/k.t:dflt}
@@ -786,6 +1058,8 @@ function renderHome(){
   const nm=Object.keys(st.miss).filter(id=>ALL[id]).length;
   $("missSub").textContent=nm?nm+" question"+(nm>1?"s":"")+" to fix":"Nothing to fix yet. Questions you miss come back here";
   $("goMiss").disabled=!nm;$("goMiss").style.opacity=nm?1:.55;
+  const nl=LESSONS.filter(l=>!st.learned[l.id]).length;
+  $("learnSub").textContent=nl===LESSONS.length?LESSONS.length+" short lessons with examples, then try it yourself":nl?nl+" of "+LESSONS.length+" lessons not read yet":"All lessons read. Reread any time.";
   const r=st.lv.read,g=st.lv.gram;
   $("testTitle").textContent="Reading test · Level "+r.cur+" "+LEVELS.read[r.cur-1].name;
   $("testSub").textContent=levelLine("read");

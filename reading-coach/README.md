@@ -15,6 +15,9 @@ the U1 W1-2 comprehension test (70%) and the U1 W4 grammar test (60%).
   - Grammar: 1 Basics (8/10) → 2 Combine (9/10) → 3 Tricky: proofreading and comma traps (9/10) →
     4 Test day (12 mixed questions, test mode, 11 right to pass).
   - Lower levels can be replayed any time; only the highest unlocked level counts toward a pass.
+- **Learn**: 17 short lessons (5 grammar topics + 12 reading skills). Each has the rule in kid
+  words, color-coded examples, an "On the test" tip, 2 try-it questions, and a button to practice
+  that exact skill. Weakest skills are listed first. After a round, the tip card links to the lesson.
 - **Fix my mistakes**: every missed question comes back until she gets it right twice.
 - Every answer shows why; each round ends with a tip card for the skill she missed most.
 - Progress (scores, accuracy per skill) is saved on the phone.
