@@ -110,6 +110,24 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .tip{background:var(--green-bg);border-radius:12px;padding:12px;font-size:.92rem;line-height:1.5}
 .tip b{display:block;margin-bottom:4px}
 .tip p{margin:0 0 6px}.tip p:last-child{margin:0}
+/* cheers: praise bubble, confetti, streak badge */
+#cheer{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top,0px));transform:translate(-50%,0);z-index:50;pointer-events:none;text-align:center;width:min(86vw,420px)}
+.bubble{display:inline-block;background:var(--card);color:var(--ink);border:3px solid var(--pencil);border-radius:20px;padding:8px 16px;box-shadow:0 8px 24px rgba(0,0,0,.18);font-family:var(--display);font-size:1.6rem;line-height:1.1;animation:pop 1.5s ease forwards}
+.bubble .em{display:inline-block;font-size:2rem;margin-right:6px;vertical-align:middle;animation:wiggle .6s ease 2}
+.bubble.soft{border-color:var(--accent);font-size:1.35rem}
+@keyframes pop{0%{transform:scale(.3);opacity:0}15%{transform:scale(1.12);opacity:1}25%{transform:scale(.96)}32%{transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9) translateY(-20px)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.15)}75%{transform:rotate(14deg) scale(1.15)}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:49;overflow:hidden}
+#confetti i{position:absolute;top:-16px;width:10px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(var(--rot));opacity:.9}}
+.streak{display:inline-block;margin-left:6px;font-weight:800;color:#d9480f;animation:pop2 .5s ease}
+@keyframes pop2{0%{transform:scale(.4)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.prob-ok{animation:glow .6s ease}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(46,125,79,.6)}100%{box-shadow:0 0 0 18px rgba(46,125,79,0)}}
+.sndrow{display:flex;gap:8px;justify-content:flex-end;margin-bottom:-8px}
+.sndrow button{font:600 .85rem var(--body);padding:6px 10px;border-radius:999px;border:2px solid var(--edge);background:var(--card)}
+.sndrow button[aria-pressed="false"]{opacity:.55}
+@media (prefers-reduced-motion:reduce){.bubble,.bubble .em,.streak,.prob-ok{animation-duration:.01s}#confetti{display:none}}
 /* learn */
 .lgroup{margin:0 0 16px}
 .lgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -147,7 +165,11 @@ mark.b{background:rgba(242,183,5,.28);background:color-mix(in srgb,var(--pencil)
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 
+<div id="confetti" aria-hidden="true"></div>
+<div id="cheer" aria-live="polite"></div>
+
 <div class="wrap" id="home">
+  <div class="sndrow"><button id="sndBtn" aria-pressed="true">🔊 Sounds</button><button id="voiceBtn" aria-pressed="true">🗣️ Voice</button></div>
   <div>
     <h1>Ivana's <span>Reading Coach</span></h1>
     <p class="sub">Practice for the Wonders tests: reading comprehension and grammar.</p>
@@ -202,7 +224,7 @@ mark.b{background:rgba(242,183,5,.28);background:color-mix(in srgb,var(--pencil)
 </div>
 
 <div class="wrap" id="quiz" hidden>
-  <div class="top"><b id="qcount">1 / 6</b><button class="ghost" id="quit">Stop</button></div>
+  <div class="top"><b><span id="qcount">1 / 6</span><span id="streak"></span></b><button class="ghost" id="quit">Stop</button></div>
   <div class="prog"><i id="qprog" style="width:0"></i></div>
   <div id="passWrap" hidden>
     <div class="passage folded" id="passage"></div>
@@ -745,6 +767,97 @@ const topicById=Object.fromEntries(GRAMMAR.map(t=>[t.id,t]));
 
 function show(id){["home","learn","lesson","quiz","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
 
+// ---------- cheers: sounds, voice, animations ----------
+st.snd=st.snd!==false; st.voice=st.voice!==false;
+let actx=null;
+function audio(){
+  if(!st.snd)return null;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){actx=null}
+  return actx;
+}
+// notes: [[freq,start,len]...]; a soft bell-like tone
+function play(notes,type){
+  const a=audio();if(!a)return;const t0=a.currentTime+.02;
+  notes.forEach(([f,at,len])=>{const o=a.createOscillator(),g=a.createGain();o.type=type||"triangle";o.frequency.value=f;
+    g.gain.setValueAtTime(0,t0+at);g.gain.linearRampToValueAtTime(.22,t0+at+.02);g.gain.exponentialRampToValueAtTime(.001,t0+at+len);
+    o.connect(g);g.connect(a.destination);o.start(t0+at);o.stop(t0+at+len+.05)});
+}
+const C5=523.25,D5=587.33,E5=659.25,F5=698.46,G5=783.99,A5=880,B5=987.77,C6=1046.5,E6=1318.5,G6=1568;
+const SOUNDS={
+  right:()=>play([[C5,0,.18],[E5,.09,.18],[G5,.18,.3]]),
+  streak:()=>play([[E5,0,.14],[G5,.08,.14],[C6,.16,.14],[E6,.24,.4]]),
+  soft:()=>play([[E5,0,.25],[C5,.14,.35]],"sine"),
+  step:()=>play([[G5,0,.12],[C6,.07,.2]],"sine"),
+  fanfare:()=>play([[C5,0,.16],[C5,.16,.12],[C5,.28,.12],[E5,.4,.22],[G5,.62,.16],[E5,.8,.12],[G5,.92,.5],[C6,.92,.6],[E6,1.1,.7]]),
+  levelup:()=>play([[C5,0,.12],[E5,.1,.12],[G5,.2,.12],[C6,.3,.2],[G5,.5,.12],[C6,.6,.12],[E6,.7,.2],[G6,.9,.8]])
+};
+function say(text){
+  if(!st.voice)return;
+  try{
+    if(window.AndroidVoice&&AndroidVoice.speak){AndroidVoice.speak(text);return}
+    if(window.speechSynthesis&&window.SpeechSynthesisUtterance){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=1.02;u.pitch=1.25;speechSynthesis.speak(u)}
+  }catch(e){}
+}
+let cheerTimer=null;
+function bubble(emoji,text,soft){
+  const c=$("cheer");c.textContent="";
+  const b=document.createElement("div");b.className="bubble"+(soft?" soft":"");
+  b.innerHTML="<span class='em'>"+emoji+"</span>"+esc(text);c.appendChild(b);
+  clearTimeout(cheerTimer);cheerTimer=setTimeout(()=>{c.textContent=""},1700);
+}
+function confetti(n){
+  const box=$("confetti"),cols=["#f2b705","#2f6f5e","#e8590c","#4dabf7","#e64980","#82c91e"];
+  for(let i=0;i<(n||40);i++){const p=document.createElement("i");
+    p.style.left=Math.random()*100+"vw";p.style.background=cols[i%cols.length];
+    p.style.setProperty("--dx",(Math.random()*120-60)+"px");p.style.setProperty("--rot",(Math.random()*720-360)+"deg");
+    p.style.animationDuration=(1.2+Math.random()*1.3)+"s";p.style.animationDelay=(Math.random()*.25)+"s";
+    if(Math.random()<.4)p.style.borderRadius="50%";
+    box.appendChild(p);setTimeout(()=>p.remove(),2900)}
+}
+const PRAISE=[["🌟","Great job!"],["🎉","You're awesome!"],["💪","Way to go, Ivana!"],["🚀","Fantastic!"],["🎯","You nailed it!"],["🧠","Smart thinking!"],["✨","Brilliant!"],["🏅","Super work!"],["😄","That's right!"],["🙌","Excellent!"],["💎","You're a star reader!"],["🦄","Amazing!"]];
+const STREAK={3:["🔥","3 in a row! You're on fire!"],5:["⚡","5 in a row! Unstoppable!"],8:["👑","8 in a row! Champion!"],10:["🏆","10 in a row! Incredible!"]};
+const OOPS=[["🌱","Nice try! Let's learn this one."],["💡","Almost! You'll get the next one."],["🤗","That's okay. Mistakes help us learn!"],["👍","Good effort! Read why below."]];
+const TESTGO=[["💪","Keep going!"],["🌟","You've got this!"],["🧐","Nice focus!"],["📖","Reading carefully, great!"],["🙂","Doing great!"]];
+let lastPraise=-1;
+function pickNew(list){let i;do{i=Math.random()*list.length|0}while(list.length>1&&i===lastPraise);lastPraise=i;return list[i]}
+let streak=0;
+function showStreak(){const el=$("streak");el.textContent="";if(streak>=2){const b=document.createElement("span");b.className="streak";b.textContent="🔥"+streak;el.appendChild(b)}}
+function cheerAnswer(ok){
+  if(ok){
+    streak++;
+    const big=STREAK[streak];
+    if(big){SOUNDS.streak();bubble(big[0],big[1]);say(big[1]);confetti(50)}
+    else{const [e,t]=pickNew(PRAISE);SOUNDS.right();bubble(e,t);say(t);if(Math.random()<.35)confetti(18)}
+  }else{
+    streak=0;$("confetti").textContent="";const [e,t]=pickNew(OOPS);SOUNDS.soft();bubble(e,t,true);say(t);
+  }
+  showStreak();
+}
+// test mode: right/wrong stays hidden, so cheer for effort and milestones
+function cheerTestStep(i,total){
+  const left=total-i;
+  let m=null;
+  if(i===Math.floor(total/2))m=["⛰️","Halfway there!"];
+  else if(left===1)m=["🏁","Last one! You can do it!"];
+  else if(i%2===0)m=pickNew(TESTGO);
+  SOUNDS.step();
+  if(m){bubble(m[0],m[1],true);say(m[1])}
+}
+function cheerFinish(right,total,lvMsg){
+  const pct=right/total;
+  setTimeout(()=>{
+    if(lvMsg&&(lvMsg.kind==="up"||lvMsg.kind==="champ")){SOUNDS.levelup();confetti(120);say(lvMsg.kind==="up"?"Level up! You did it, Ivana!":"Champion! You beat the top level!");return}
+    if(pct===1){SOUNDS.fanfare();confetti(100);say("Perfect score! You're awesome, Ivana!")}
+    else if(pct>=.8){SOUNDS.fanfare();confetti(60);say("Great job! You got "+right+" out of "+total+"!")}
+    else if(pct>=.6){SOUNDS.right();confetti(20);say("Good work! "+right+" out of "+total+". Keep practicing!")}
+    else{SOUNDS.soft();say("Good effort! Practice makes progress. Let's look at the tips.")}
+  },250);
+}
+function renderSnd(){$("sndBtn").setAttribute("aria-pressed",st.snd);$("sndBtn").textContent=(st.snd?"🔊":"🔇")+" Sounds";$("voiceBtn").setAttribute("aria-pressed",st.voice);$("voiceBtn").textContent=(st.voice?"🗣️":"🤐")+" Voice"}
+$("sndBtn").onclick=()=>{st.snd=!st.snd;save();renderSnd();if(st.snd)SOUNDS.right()};
+$("voiceBtn").onclick=()=>{st.voice=!st.voice;save();renderSnd();if(st.voice)say("Hi Ivana! Let's practice!")};
+renderSnd();
+
 // ---------- session ----------
 let S=null; // {kind,track,lvl,counts,name,items:[q],i,right,wrong:[],hl,test}
 function pickWeighted(qs,n,weight){
@@ -802,7 +915,7 @@ function startMisses(){
   S={kind:"miss",counts:false,name:"Fix my mistakes",items:shuffle(ids).slice(0,10).map(id=>ALL[id]),i:0,right:0,wrong:[],hl:true,test:false};
   begin();
 }
-function begin(){show("quiz");renderQ()}
+function begin(){streak=0;showStreak();$("confetti").textContent="";$("cheer").textContent="";show("quiz");renderQ()}
 
 // ---------- passage ----------
 function storyHTML(s,hl){
@@ -910,6 +1023,7 @@ $("check").onclick=()=>{
     // test mode: no feedback, move straight on
     const ok=grade();record(q,ok);
     if(ok)S.right++;else S.wrong.push({q,yours:answerText(q,"yours",sel)});
+    if(S.i+1<S.items.length)cheerTestStep(S.i+1,S.items.length);
     S.i++;if(S.i>=S.items.length)finish();else{renderQ();window.scrollTo(0,0)}
     return;
   }
@@ -921,7 +1035,8 @@ $("check").onclick=()=>{
   else if(q.type==="tap"){c.querySelectorAll(".chips button").forEach(b=>{const i=+b.dataset.i;if([].concat(q.a).includes(i))b.classList.add("right");else if(sel.includes(i))b.classList.add("wrong")})}
   else markChoices(c.querySelector(".choices"),q.a,sel);
   const fb=$("fb");fb.hidden=false;fb.className="fb "+(ok?"ok":"no");
-  fb.innerHTML="<b>"+(ok?pickOne(["Yes!","Correct!","You got it!","Nice reading!"]):"Not quite.")+"</b>"+fmt(q.why||"");
+  fb.innerHTML="<b>"+(ok?pickOne(["Yes! ","Correct! ","You got it! ","Nice reading! "])+"🎉":"Not quite, but that's how we learn.")+"</b>"+fmt(q.why||"");
+  cheerAnswer(ok);if(ok){c.classList.remove("prob-ok");void c.offsetWidth;c.classList.add("prob-ok")}
   record(q,ok);
   if(ok)S.right++;else S.wrong.push({q,yours:answerText(q,"yours",sel)});
   $("check").textContent=S.i+1>=S.items.length?"See my score":"Next";
@@ -955,7 +1070,7 @@ function finish(){
   $("score").textContent=S.right+"/"+S.items.length;
   const pct=Math.round(S.right/S.items.length*100);
   $("verdict").textContent=pct===100?"Perfect!":pct>=90?"That's an A!":pct>=80?"Solid B! Almost there.":pct>=70?"Good try! Read the tips below.":"Let's practice this more.";
-  $("detail").textContent=pct+"% · "+S.name+(S.lvl?" · "+TRACK_NAME[S.track]+" level "+S.lvl:"");
+  $("detail").textContent=pct+"% · "+S.name+(S.lvl&&S.kind!=="grammar"?" · "+TRACK_NAME[S.track]+" level "+S.lvl:"");
   // level banner
   const lu=$("levelup");lu.hidden=true;
   if(lvMsg){
@@ -983,7 +1098,9 @@ function finish(){
     const where=w.q.story&&S.items.some(x=>x.story!==w.q.story)?"<p class='muted'>"+esc(storyById[w.q.story].title)+(w.q.para?", paragraph "+w.q.para:"")+"</p>":"";
     d.innerHTML=where+"<p><b>"+fmt(qt)+"</b></p>"+(w.q.sent?"<p>"+fmt(w.q.sent)+"</p>":"")+"<p class='yours'>You said: "+fmt(w.yours)+"</p><p class='ans'>Answer: "+fmt(answerText(w.q,"right"))+"</p><p>"+fmt(w.q.why||"")+"</p>";
     rv.appendChild(d)});
+  $("cheer").textContent="";
   show("done");renderHome();
+  cheerFinish(S.right,S.items.length,lvMsg);
 }
 $("again").onclick=()=>{
   if(S.kind==="try")practice(lessonById[S.lesson]);

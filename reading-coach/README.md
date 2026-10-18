@@ -18,6 +18,11 @@ the U1 W1-2 comprehension test (70%) and the U1 W4 grammar test (60%).
 - **Learn**: 17 short lessons (5 grammar topics + 12 reading skills). Each has the rule in kid
   words, color-coded examples, an "On the test" tip, 2 try-it questions, and a button to practice
   that exact skill. Weakest skills are listed first. After a round, the tip card links to the lesson.
+- **Cheers**: right answers get a happy chime, spoken praise ("Great job!", "You're awesome!"), a
+  pop-up bubble and sometimes confetti. Streaks of 3/5/8/10 get bigger cheers. Wrong answers get a
+  gentle "Nice try!" instead of a buzzer. In test mode, she gets effort cheers ("Halfway there!",
+  "Last one!") without giving away answers. Finishing plays a fanfare. Sounds and Voice can be
+  switched off on the home screen. The voice uses the phone's text-to-speech (app v1.1).
 - **Fix my mistakes**: every missed question comes back until she gets it right twice.
 - Every answer shows why; each round ends with a tip card for the skill she missed most.
 - Progress (scores, accuracy per skill) is saved on the phone.

@@ -5,7 +5,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -19,6 +21,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 /**
  * Shows the Reading Coach page. On every launch it quietly downloads the newest
@@ -30,6 +33,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private String current;
     private final Handler main = new Handler(Looper.getMainLooper());
+    private TextToSpeech tts;
+    private volatile boolean ttsReady;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -42,6 +47,17 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setTextZoom(100);
         setContentView(web);
+        // Lets the page speak praise out loud ("Great job!") with the phone's own voice
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status != TextToSpeech.SUCCESS) return;
+                tts.setLanguage(Locale.US);
+                tts.setPitch(1.15f);
+                ttsReady = true;
+            }
+        });
+        web.addJavascriptInterface(new Voice(), "AndroidVoice");
         current = loadPage();
         show(current);
     }
@@ -50,6 +66,19 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         checkForUpdate();
+    }
+
+    private class Voice {
+        @JavascriptInterface
+        public void speak(String text) {
+            if (ttsReady && text != null) tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "cheer");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (tts != null) tts.shutdown();
+        super.onDestroy();
     }
 
     private File cacheFile() { return new File(getFilesDir(), "index.html"); }
