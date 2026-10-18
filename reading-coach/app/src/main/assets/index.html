@@ -110,6 +110,21 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .tip{background:var(--green-bg);border-radius:12px;padding:12px;font-size:.92rem;line-height:1.5}
 .tip b{display:block;margin-bottom:4px}
 .tip p{margin:0 0 6px}.tip p:last-child{margin:0}
+/* levels */
+.ladders{display:flex;flex-direction:column;gap:14px}
+.lad b{display:block;font-size:.95rem;margin-bottom:6px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps button{font:600 .85rem var(--body);padding:10px 4px;border-radius:10px;border:2px solid var(--edge);background:var(--card);line-height:1.2}
+.steps button small{display:block;font-weight:400;font-size:.72rem;color:var(--muted);margin-top:2px}
+.steps button.done{background:var(--green-bg);border-color:var(--green)}
+.steps button.now{border-color:var(--pencil);box-shadow:inset 0 0 0 1px var(--pencil)}
+.steps button.picked{outline:3px solid var(--ink);outline-offset:1px}
+.steps button:disabled{opacity:.45}
+.lad .muted{margin-top:6px}
+.levelup{background:var(--pencil);color:var(--pencil-ink);border-radius:14px;padding:16px;text-align:center}
+.levelup b{display:block;font-family:var(--display);font-size:2rem;line-height:1.1}
+.levelup p{margin:6px 0 0}
+.testnote{background:var(--paper);border:1.5px dashed var(--edge);border-radius:10px;padding:8px 10px;font-size:.85rem;color:var(--muted);margin:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 
@@ -119,9 +134,14 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
     <p class="sub">Practice for the Wonders tests: reading comprehension and grammar.</p>
   </div>
   <div class="menu">
-    <button class="tile hot" id="goTest"><span class="ic">📝</span><span><b>Practice test</b><small id="testSub">A story + 6 questions, like the real Wonders test</small></span></button>
-    <button class="tile" id="goGrammar"><span class="ic">✏️</span><span><b>Grammar drill</b><small>10 quick questions</small></span></button>
+    <button class="tile hot" id="goTest"><span class="ic">📝</span><span><b id="testTitle">Reading test · Level 1</b><small id="testSub"></small></span></button>
+    <button class="tile hot" id="goGrammar"><span class="ic">✏️</span><span><b id="gramTitle">Grammar · Level 1</b><small id="gramSub"></small></span></button>
     <button class="tile" id="goMiss"><span class="ic">🔁</span><span><b>Fix my mistakes</b><small id="missSub">Questions you missed come back here</small></span></button>
+  </div>
+  <div class="panel">
+    <p class="label">Levels</p>
+    <div class="ladders" id="ladders"></div>
+    <p class="muted" style="margin-top:10px">Pass a level twice to unlock the next one. Each level is harder. Tap an open level to practice it again.</p>
   </div>
   <div class="panel">
     <p class="label">Pick a grammar topic</p>
@@ -159,6 +179,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
     <p class="verdict" id="verdict">Nice work!</p>
     <p class="muted" id="detail" style="text-align:center;margin-top:6px"></p>
   </div>
+  <div class="levelup" id="levelup" hidden></div>
   <div class="tip" id="tip" hidden></div>
   <p class="label" id="revLabel">Look again</p>
   <div class="rev" id="rev"></div>
@@ -181,23 +202,31 @@ const GRAMMAR=[
  {type:"mc",q:"Which end mark belongs at the end of this sentence?",sent:"Hand me the scissors, please",choices:["Period (.)","Question mark (?)","Exclamation mark (!)","No end mark"],keep:1,a:0,why:"This is a polite command, so it ends with a period."},
  {type:"mc",q:"Which of these is a sentence fragment (NOT a complete sentence)?",choices:["The dog barked at the mail carrier.","Running down the hallway.","Maya laughed.","We left early."],a:1,why:"*Running down the hallway* does not say WHO is running, so it has no subject. It is a fragment. Even short ones like *Maya laughed.* are complete because they have a subject and a verb."},
  {type:"mc",q:"Which of these is a complete sentence?",choices:["After the long game.","The tired players.","The tired players rested after the long game.","Rested after the long game."],a:2,why:"A complete sentence needs a subject (*The tired players*) AND a predicate (*rested after the long game*)."},
- {type:"mc",q:"Which is the best way to fix this fragment?",sent:"Under the old bridge by the river.",choices:["Under the old bridge by the river!","A family of ducks lives under the old bridge by the river.","Under the old bridge. By the river.","The old bridge."],a:1,why:"The fragment tells WHERE but not WHO or WHAT HAPPENED. Adding *A family of ducks lives* gives it a subject and a verb."},
+ {lvl:2,type:"mc",q:"Which is the best way to fix this fragment?",sent:"Under the old bridge by the river.",choices:["Under the old bridge by the river!","A family of ducks lives under the old bridge by the river.","Under the old bridge. By the river.","The old bridge."],a:1,why:"The fragment tells WHERE but not WHO or WHAT HAPPENED. Adding *A family of ducks lives* gives it a subject and a verb."},
  {type:"mc",q:"Which sentence is a command?",choices:["Grandma makes the best dumplings.","Stir the soup slowly.","Is the soup ready yet?","This soup is amazing!"],a:1,why:"*Stir the soup slowly* tells someone what to do. The subject (you) is understood."},
- {type:"mc",q:"Change this statement into a question. Which is correct?",sent:"The library is open on Saturday.",choices:["The library is open on Saturday?","Is the library open on Saturday?","Open the library on Saturday.","The library is open on Saturday!"],a:1,why:"To make a question, move the verb *is* to the front: *Is the library open…?* and end with a question mark."},
- {type:"multi",q:"Which TWO are sentence fragments?",choices:["Because it was raining.","The bus was late.","My little brother with the red hat.","Close the window."],a:[0,2],why:"*Because it was raining* is only a dependent clause, and *My little brother with the red hat* has no predicate (it doesn't say what he did). *Close the window* is a command, so it IS a sentence."}
+ {lvl:2,type:"mc",q:"Change this statement into a question. Which is correct?",sent:"The library is open on Saturday.",choices:["The library is open on Saturday?","Is the library open on Saturday?","Open the library on Saturday.","The library is open on Saturday!"],a:1,why:"To make a question, move the verb *is* to the front: *Is the library open…?* and end with a question mark."},
+ {lvl:2,type:"multi",q:"Which TWO are sentence fragments?",choices:["Because it was raining.","The bus was late.","My little brother with the red hat.","Close the window."],a:[0,2],why:"*Because it was raining* is only a dependent clause, and *My little brother with the red hat* has no predicate (it doesn't say what he did). *Close the window* is a command, so it IS a sentence."},
+ {lvl:3,type:"mc",q:"Which sentence has the WRONG end mark?",choices:["Where did you put my backpack.","Please pass the salt.","What an amazing view!","The museum opens at nine."],a:0,why:"*Where did you put my backpack* asks something, so it needs a question mark, not a period."},
+ {lvl:3,type:"mc",q:"Which sentence is an exclamation, NOT a command?",choices:["Watch out for that branch!","Wow, the fireworks are huge!","Stop the car!","Hurry up!"],a:1,why:"Commands can end with ! too. *Watch out*, *Stop* and *Hurry up* all tell someone to do something. *Wow, the fireworks are huge!* only shows strong feeling, so it is an exclamation."},
+ {lvl:3,type:"mc",q:"Read the paragraph. Which sentence is a fragment?",sent:"(1) My family went camping last weekend. (2) Near the lake with tall pine trees. (3) At night, we roasted marshmallows. (4) What a fun trip it was!",choices:["Sentence 1","Sentence 2","Sentence 3","Sentence 4"],keep:1,a:1,why:"Sentence 2 tells WHERE but has no subject and no verb. Fix it: *We camped near the lake with tall pine trees.*"},
+ {lvl:3,type:"mc",q:"Which is a complete sentence, even though it is very short?",choices:["After the storm.","Go!","The big red barn.","Because we won."],a:1,why:"*Go!* is a command. Its subject (*you*) is understood, and *go* is the verb. The others are missing a subject or a predicate."}
 ]},
 {id:"subjpred",name:"Subjects & predicates",qs:[
  {type:"tap",q:"Tap the complete subject.",hint:"Who or what is the sentence about?",parts:["The friendly librarian","helped us find","books about volcanoes."],a:0,why:"The sentence is about *The friendly librarian*. That whole group of words is the complete subject."},
- {type:"tap",q:"Tap the complete predicate.",hint:"What does the subject do or is?",parts:["My cousin from Texas","rode a horse","for the first time."],a:[1,2],why:"The complete predicate is everything that tells what the subject did: *rode a horse for the first time*. Tap every part of it."},
- {type:"mc",q:"What is the SIMPLE subject of this sentence?",sent:"The tall *oak* tree in our yard lost all its leaves.",choices:["tall","tree","yard","leaves"],a:1,why:"The complete subject is *The tall oak tree in our yard*. The main word (the simple subject) is *tree*."},
+ {lvl:2,type:"tap",q:"Tap the complete predicate.",hint:"What does the subject do or is?",parts:["My cousin from Texas","rode a horse","for the first time."],a:[1,2],why:"The complete predicate is everything that tells what the subject did: *rode a horse for the first time*. Tap every part of it."},
+ {lvl:2,type:"mc",q:"What is the SIMPLE subject of this sentence?",sent:"The tall *oak* tree in our yard lost all its leaves.",choices:["tall","tree","yard","leaves"],a:1,why:"The complete subject is *The tall oak tree in our yard*. The main word (the simple subject) is *tree*."},
  {type:"mc",q:"What is the SIMPLE predicate (the main verb) of this sentence?",sent:"Three noisy crows sat on the fence all morning.",choices:["crows","noisy","sat","morning"],a:2,why:"The simple predicate is the main verb: *sat*. It tells what the crows did."},
  {type:"mc",q:"Which sentence has a COMPOUND SUBJECT?",choices:["Ana sang and danced in the show.","Ana and Leo sang in the show.","Ana sang in the show on Friday.","Ana sang a song."],a:1,why:"A compound subject is two or more subjects joined by *and* or *or*: *Ana and Leo* both sang."},
  {type:"mc",q:"Which sentence has a COMPOUND PREDICATE?",choices:["Mom and Dad cooked dinner.","The puppy ran to the door and barked loudly.","The puppy and the kitten slept.","The puppy is brown."],a:1,why:"A compound predicate is two verbs for the same subject: the puppy *ran* and *barked*."},
- {type:"mc",q:"Combine these sentences using a compound subject.",sent:"Jamal likes soccer. Priya likes soccer.",choices:["Jamal likes soccer and Priya.","Jamal and Priya like soccer.","Jamal likes soccer, Priya likes soccer.","Jamal and Priya likes soccer."],a:1,why:"Join the two subjects with *and*. With two subjects, use *like* (not *likes*): *Jamal and Priya like soccer*."},
- {type:"mc",q:"Combine these sentences using a compound predicate.",sent:"The chef chopped the onions. The chef fried them in butter.",choices:["The chef chopped the onions, the chef fried them in butter.","The chef chopped the onions and fried them in butter.","The chef and the onions fried in butter.","Chopped the onions and fried them."],a:1,why:"Keep one subject (*The chef*) and join the two verbs with *and*: *chopped … and fried …*"},
- {type:"tap",q:"Tap the simple subject.",parts:["The","old","map","in the attic","showed","a secret path."],a:2,why:"The complete subject is *The old map in the attic*, but its main word is *map*."},
- {type:"mc",q:"In this sentence, who or what is the subject?",sent:"Over the hill rolled the giant pumpkin.",choices:["the hill","rolled","the giant pumpkin","over"],a:2,why:"This sentence is flipped around. Ask, *What rolled?* The giant pumpkin rolled, so *the giant pumpkin* is the subject even though it comes at the end."},
- {type:"mc",q:"Which group of words is the complete predicate?",sent:"Every summer, my grandparents visit us from India.",choices:["Every summer","my grandparents","visit us from India","my grandparents visit"],a:2,why:"The predicate tells what the subject (*my grandparents*) does: *visit us from India*. *Every summer* tells when."}
+ {lvl:2,type:"mc",q:"Combine these sentences using a compound subject.",sent:"Jamal likes soccer. Priya likes soccer.",choices:["Jamal likes soccer and Priya.","Jamal and Priya like soccer.","Jamal likes soccer, Priya likes soccer.","Jamal and Priya likes soccer."],a:1,why:"Join the two subjects with *and*. With two subjects, use *like* (not *likes*): *Jamal and Priya like soccer*."},
+ {lvl:2,type:"mc",q:"Combine these sentences using a compound predicate.",sent:"The chef chopped the onions. The chef fried them in butter.",choices:["The chef chopped the onions, the chef fried them in butter.","The chef chopped the onions and fried them in butter.","The chef and the onions fried in butter.","Chopped the onions and fried them."],a:1,why:"Keep one subject (*The chef*) and join the two verbs with *and*: *chopped … and fried …*"},
+ {lvl:2,type:"tap",q:"Tap the simple subject.",parts:["The","old","map","in the attic","showed","a secret path."],a:2,why:"The complete subject is *The old map in the attic*, but its main word is *map*."},
+ {lvl:2,type:"mc",q:"In this sentence, who or what is the subject?",sent:"Over the hill rolled the giant pumpkin.",choices:["the hill","rolled","the giant pumpkin","over"],a:2,why:"This sentence is flipped around. Ask, *What rolled?* The giant pumpkin rolled, so *the giant pumpkin* is the subject even though it comes at the end."},
+ {lvl:2,type:"mc",q:"Which group of words is the complete predicate?",sent:"Every summer, my grandparents visit us from India.",choices:["Every summer","my grandparents","visit us from India","my grandparents visit"],a:2,why:"The predicate tells what the subject (*my grandparents*) does: *visit us from India*. *Every summer* tells when."},
+ {lvl:3,type:"tap",q:"Tap the complete subject.",hint:"Careful: the sentence does not start with the subject.",parts:["Hidden under the porch,","a tiny gray kitten","slept","all afternoon."],a:1,why:"Ask *Who slept?* The answer is *a tiny gray kitten*. *Hidden under the porch* just describes where it was."},
+ {lvl:3,type:"mc",q:"Which sentence has BOTH a compound subject AND a compound predicate?",choices:["Mia and Jo baked cookies and shared them with neighbors.","Mia baked cookies and shared them with neighbors.","Mia and Jo baked cookies.","Mia baked cookies, and Jo shared them."],a:0,why:"Two subjects (*Mia and Jo*) did two things (*baked* and *shared*). Choice D is a compound SENTENCE, which is different."},
+ {lvl:3,type:"mc",q:"Which is the best way to combine these sentences?",sent:"The wind howled. The wind rattled the windows. The wind blew over our trash can.",choices:["The wind howled, rattled the windows, and blew over our trash can.","The wind howled, the wind rattled the windows, the wind blew over our trash can.","The wind howled and the windows and the trash can.","Howled, rattled and blew the wind."],a:0,why:"Keep one subject (*The wind*) and list the three verbs with commas and *and*. That is a compound predicate."},
+ {lvl:3,type:"mc",q:"How should this sentence be corrected?",sent:"My brother and his friend *plays* soccer every Saturday.",choices:["Change plays to play","Change brother to brothers","Change every to each","It is correct"],a:0,why:"The compound subject (*My brother and his friend*) means two people, so the verb is *play*, not *plays*."}
 ]},
 {id:"compound",name:"Compound sentences",qs:[
  {type:"mc",q:"Which sentence is a COMPOUND sentence?",choices:["Leah and Sam built a fort.","Leah built a fort, and Sam painted it.","Leah built a fort after school.","Leah built and painted a fort."],a:1,why:"A compound sentence joins two complete sentences: *Leah built a fort* + *Sam painted it*, joined with a comma and *and*."},
@@ -205,38 +234,54 @@ const GRAMMAR=[
  {type:"mc",q:"Choose the best conjunction.",sent:"It started to rain, ___ we went inside.",choices:["but","or","so","yet"],keep:1,a:2,why:"Going inside happened BECAUSE of the rain. *So* shows a result."},
  {type:"mc",q:"Choose the best conjunction.",sent:"You can have the apple, ___ you can have the banana.",choices:["and","but","or","so"],keep:1,a:2,why:"This is a choice between two things, so use *or*."},
  {type:"mc",q:"Where does the comma go in this compound sentence?",sent:"The bell rang and the students lined up.",choices:["The, bell rang and the students lined up.","The bell rang, and the students lined up.","The bell rang and, the students lined up.","The bell rang and the students, lined up."],a:1,why:"In a compound sentence, the comma goes right BEFORE the conjunction (*, and*)."},
- {type:"mc",q:"Combine into one compound sentence.",sent:"Owls hunt at night. Hawks hunt during the day.",choices:["Owls hunt at night, but hawks hunt during the day.","Owls hunt at night hawks hunt during the day.","Owls and hawks hunt at night during the day.","Owls hunt at night, hawks hunt during the day."],a:0,why:"Join two complete sentences with a comma + conjunction. *But* fits because the times are opposite. Just a comma alone (choice D) is a mistake called a comma splice."},
- {type:"mc",q:"Which sentence is NOT a compound sentence?",choices:["Dad mowed the lawn, and I raked the leaves.","The movie was long, but it was funny.","My sister and I walked to school.","We can play outside, or we can read."],a:2,why:"*My sister and I walked to school* has a compound SUBJECT, but it is only one sentence. The others join two full sentences."},
- {type:"tap",q:"Tap the conjunction that joins the two sentences.",parts:["The trail was steep,","yet","we reached the top","before lunch."],a:1,why:"*Yet* (like *but*) joins the two complete thoughts. FANBOYS are the joining words: for, and, nor, but, or, yet, so."},
- {type:"multi",q:"Which TWO sentences are written correctly?",choices:["The sun set, and the stars came out.","The sun set and, the stars came out.","I was hungry, so I made a sandwich.","I was hungry so, I made a sandwich."],a:[0,2],why:"The comma comes BEFORE the conjunction: *, and* and *, so*."}
+ {lvl:2,type:"mc",q:"Combine into one compound sentence.",sent:"Owls hunt at night. Hawks hunt during the day.",choices:["Owls hunt at night, but hawks hunt during the day.","Owls hunt at night hawks hunt during the day.","Owls and hawks hunt at night during the day.","Owls hunt at night, hawks hunt during the day."],a:0,why:"Join two complete sentences with a comma + conjunction. *But* fits because the times are opposite. Just a comma alone (choice D) is a mistake called a comma splice."},
+ {lvl:2,type:"mc",q:"Which sentence is NOT a compound sentence?",choices:["Dad mowed the lawn, and I raked the leaves.","The movie was long, but it was funny.","My sister and I walked to school.","We can play outside, or we can read."],a:2,why:"*My sister and I walked to school* has a compound SUBJECT, but it is only one sentence. The others join two full sentences."},
+ {lvl:2,type:"tap",q:"Tap the conjunction that joins the two sentences.",parts:["The trail was steep,","yet","we reached the top","before lunch."],a:1,why:"*Yet* (like *but*) joins the two complete thoughts. FANBOYS are the joining words: for, and, nor, but, or, yet, so."},
+ {lvl:2,type:"multi",q:"Which TWO sentences are written correctly?",choices:["The sun set, and the stars came out.","The sun set and, the stars came out.","I was hungry, so I made a sandwich.","I was hungry so, I made a sandwich."],a:[0,2],why:"The comma comes BEFORE the conjunction: *, and* and *, so*."},
+ {lvl:3,type:"mc",q:"Which sentence is punctuated correctly?",choices:["Sam fed the dog, and walked it.","Sam fed the dog, and Lia walked it.","Sam fed the dog and, Lia walked it.","Sam, fed the dog and Lia walked it."],a:1,why:"Use a comma before *and* only when BOTH sides are complete sentences. *Lia walked it* is a sentence, so B is right. In A, *walked it* has no subject, so no comma is needed."},
+ {lvl:3,type:"multi",q:"Which TWO sentences NEED a comma before the conjunction?",choices:["The kite rose high and the string snapped.","The kite rose high and drifted away.","I knocked but nobody answered.","I knocked and waited."],a:[0,2],why:"A and C join two full sentences (*the string snapped*, *nobody answered*), so they need a comma. B and D are compound predicates with one subject, so no comma."},
+ {lvl:3,type:"mc",q:"Which pair of sentences is best joined with *yet*?",choices:["The test was hard. Leo got every answer right.","It rained. The grass got wet.","We can bike. We can walk.","I was thirsty. I drank water."],a:0,why:"*Yet* means *but still*. Getting every answer right is surprising after a hard test. B and D need *so*, and C needs *or*."},
+ {lvl:3,type:"mc",q:"Which compound sentence makes the MOST sense?",choices:["I studied for the spelling test, so I got a good score.","I studied for the spelling test, but I got a good score.","I studied for the spelling test, or I got a good score.","I studied for the spelling test, yet I got a good score."],a:0,why:"The good score is a RESULT of studying, so *so* fits. *But* and *yet* would mean it was a surprise."}
 ]},
 {id:"complex",name:"Complex sentences",qs:[
  {type:"mc",q:"Which sentence is a COMPLEX sentence?",choices:["We played outside, and then we ate.","We played outside until the sun went down.","We played outside.","We played outside, but Ben stayed in."],a:1,why:"A complex sentence has one complete sentence (independent clause) plus a dependent clause that starts with a word like *until, because, when, after, although*. *until the sun went down* can't stand alone."},
  {type:"tap",q:"Tap the DEPENDENT clause.",hint:"It starts with a word like because, when, after, if, although and can't stand alone.",parts:["Because the river flooded,","the road","was closed for a week."],a:0,why:"*Because the river flooded* cannot stand alone. It needs the rest of the sentence. That makes it the dependent clause."},
- {type:"tap",q:"Tap the INDEPENDENT clause.",hint:"It could be a sentence all by itself.",parts:["Mia practiced her violin","before she went to bed."],a:0,why:"*Mia practiced her violin* makes sense alone, so it is the independent clause. *before she went to bed* depends on it."},
+ {lvl:2,type:"tap",q:"Tap the INDEPENDENT clause.",hint:"It could be a sentence all by itself.",parts:["Mia practiced her violin","before she went to bed."],a:0,why:"*Mia practiced her violin* makes sense alone, so it is the independent clause. *before she went to bed* depends on it."},
  {type:"mc",q:"Which word is the subordinating conjunction?",sent:"*Although* it was cold, we ate ice cream.",choices:["Although","it","cold","we"],a:0,why:"*Although* starts the dependent clause. Other subordinating conjunctions: because, when, after, before, if, since, until, while, unless."},
  {type:"mc",q:"Choose the best word to complete the complex sentence.",sent:"We couldn't play the game ___ we found the missing piece.",choices:["because","until","although","and"],a:1,why:"They had to wait for the piece. *Until* tells how long: they couldn't play UNTIL they found it."},
  {type:"mc",q:"Choose the best word to complete the complex sentence.",sent:"___ Leo studied hard, he did well on the test.",choices:["Because","Unless","Before","Or"],a:0,why:"Studying hard is the REASON he did well, so use *Because*."},
- {type:"mc",q:"Choose the best word to complete the complex sentence.",sent:"Take an umbrella ___ it rains later.",choices:["in case","until","although","so"],a:0,why:"You take the umbrella to be ready if it might rain. *In case* fits. (Some tests use *if* here too.)"},
- {type:"mc",q:"Which sentence uses the comma correctly?",choices:["When the movie ended we clapped.","When the movie ended, we clapped.","When, the movie ended we clapped.","When the movie, ended we clapped."],a:1,why:"When a sentence STARTS with the dependent clause, put a comma after it: *When the movie ended, we clapped.*"},
- {type:"mc",q:"Which sentence is punctuated correctly?",choices:["We clapped, when the movie ended.","We clapped when the movie ended.","We clapped when, the movie ended.","We, clapped when the movie ended."],a:1,why:"When the dependent clause comes at the END, you usually do NOT need a comma."},
- {type:"mc",q:"Combine the sentences into a complex sentence.",sent:"The puppy was tired. It had played all day.",choices:["The puppy was tired, it had played all day.","The puppy was tired because it had played all day.","The puppy was tired and played all day.","Because the puppy was tired."],a:1,why:"*because it had played all day* is the dependent clause. It explains WHY the puppy was tired. Choice D is a fragment."},
- {type:"mc",q:"Combine the sentences into a complex sentence.",sent:"You finish your homework. Then you can watch TV.",choices:["After you finish your homework, you can watch TV.","You finish your homework, you can watch TV.","You finish your homework and TV.","After you finish your homework."],a:0,why:"*After you finish your homework* is the dependent clause, followed by a comma and the independent clause."},
- {type:"mc",q:"What kind of sentence is this?",sent:"If you water the seeds every day, they will sprout.",choices:["Simple","Compound","Complex","Fragment"],keep:1,a:2,why:"It has a dependent clause (*If you water the seeds every day*) + an independent clause (*they will sprout*). That is complex."},
- {type:"mc",q:"What kind of sentence is this?",sent:"I watered the seeds, and they sprouted.",choices:["Simple","Compound","Complex","Fragment"],keep:1,a:1,why:"Two complete sentences joined by *, and*. That is compound. (Complex sentences use words like because, if, when.)"},
- {type:"mc",q:"Which group of words is a dependent clause?",choices:["the bird flew away","since the store was closed","we went home","Kai found a shell"],a:1,why:"*since the store was closed* starts with *since* and can't stand alone. The others could all be sentences."},
- {type:"multi",q:"Which TWO sentences are complex sentences?",choices:["While Dad cooked, I set the table.","Dad cooked, and I set the table.","I set the table before the guests arrived.","Dad and I set the table."],a:[0,2],why:"Both have a dependent clause: *While Dad cooked* and *before the guests arrived*. Choice B is compound, and choice D is simple."}
+ {lvl:2,type:"mc",q:"Choose the best word to complete the complex sentence.",sent:"Take an umbrella ___ it rains later.",choices:["in case","until","although","so"],a:0,why:"You take the umbrella to be ready if it might rain. *In case* fits. (Some tests use *if* here too.)"},
+ {lvl:2,type:"mc",q:"Which sentence uses the comma correctly?",choices:["When the movie ended we clapped.","When the movie ended, we clapped.","When, the movie ended we clapped.","When the movie, ended we clapped."],a:1,why:"When a sentence STARTS with the dependent clause, put a comma after it: *When the movie ended, we clapped.*"},
+ {lvl:2,type:"mc",q:"Which sentence is punctuated correctly?",choices:["We clapped, when the movie ended.","We clapped when the movie ended.","We clapped when, the movie ended.","We, clapped when the movie ended."],a:1,why:"When the dependent clause comes at the END, you usually do NOT need a comma."},
+ {lvl:2,type:"mc",q:"Combine the sentences into a complex sentence.",sent:"The puppy was tired. It had played all day.",choices:["The puppy was tired, it had played all day.","The puppy was tired because it had played all day.","The puppy was tired and played all day.","Because the puppy was tired."],a:1,why:"*because it had played all day* is the dependent clause. It explains WHY the puppy was tired. Choice D is a fragment."},
+ {lvl:2,type:"mc",q:"Combine the sentences into a complex sentence.",sent:"You finish your homework. Then you can watch TV.",choices:["After you finish your homework, you can watch TV.","You finish your homework, you can watch TV.","You finish your homework and TV.","After you finish your homework."],a:0,why:"*After you finish your homework* is the dependent clause, followed by a comma and the independent clause."},
+ {lvl:2,type:"mc",q:"What kind of sentence is this?",sent:"If you water the seeds every day, they will sprout.",choices:["Simple","Compound","Complex","Fragment"],keep:1,a:2,why:"It has a dependent clause (*If you water the seeds every day*) + an independent clause (*they will sprout*). That is complex."},
+ {lvl:2,type:"mc",q:"What kind of sentence is this?",sent:"I watered the seeds, and they sprouted.",choices:["Simple","Compound","Complex","Fragment"],keep:1,a:1,why:"Two complete sentences joined by *, and*. That is compound. (Complex sentences use words like because, if, when.)"},
+ {lvl:2,type:"mc",q:"Which group of words is a dependent clause?",choices:["the bird flew away","since the store was closed","we went home","Kai found a shell"],a:1,why:"*since the store was closed* starts with *since* and can't stand alone. The others could all be sentences."},
+ {lvl:2,type:"multi",q:"Which TWO sentences are complex sentences?",choices:["While Dad cooked, I set the table.","Dad cooked, and I set the table.","I set the table before the guests arrived.","Dad and I set the table."],a:[0,2],why:"Both have a dependent clause: *While Dad cooked* and *before the guests arrived*. Choice B is compound, and choice D is simple."},
+ {lvl:3,type:"mc",q:"Which sentence uses *although* correctly?",choices:["Although it was sunny, we wore sunglasses.","Although it was sunny, the air was cold.","Although the air was cold, we wore coats.","Although I was hungry, I ate lunch."],a:1,why:"*Although* shows a surprise or contrast. Sunny but cold is a contrast. The other sentences need *because*."},
+ {lvl:3,type:"tap",q:"Tap the DEPENDENT clause.",parts:["We stayed inside","until the storm passed,","and then we played outside."],a:1,why:"*until the storm passed* starts with *until* and can't stand alone. The other two parts are complete thoughts joined by *and*."},
+ {lvl:3,type:"mc",q:"Which sentence is NOT a complex sentence?",choices:["Since you asked, I'll tell you.","Before the sun rose, the birds sang.","The sun rose, and the birds sang.","The birds sang because the sun rose."],a:2,why:"C joins two sentences with *, and*, so it is compound. The others each have a dependent clause (*Since…*, *Before…*, *because…*)."},
+ {lvl:3,type:"mc",q:"Combine the sentences so they show TIME.",sent:"Mom got home. We ate dinner.",choices:["When Mom got home, we ate dinner.","Mom got home, and we ate dinner.","Because Mom got home, we ate dinner.","Mom got home, we ate dinner."],a:0,why:"*When* shows time. *Because* shows a reason, which changes the meaning. *, and* makes it compound, and D is a comma splice."},
+ {lvl:3,type:"mc",q:"Which sentence has a comma MISTAKE?",choices:["If it snows, school will close.","School will close, if it snows.","After lunch ended, we had recess.","We had recess after lunch ended."],a:1,why:"When the dependent clause (*if it snows*) comes at the END, you don't need a comma."},
+ {lvl:3,type:"mc",q:"Choose the best word.",sent:"___ she practiced every day, Ava still felt nervous before the recital.",choices:["Because","Although","Unless","When"],a:1,why:"Practicing every day and still feeling nervous is a contrast. *Although* fits. The word *still* is a clue."},
+ {lvl:3,type:"mc",q:"Choose the best word.",sent:"You won't get better at piano ___ you practice.",choices:["unless","because","although","since"],a:0,why:"*Unless* means *if not*. You won't get better if you don't practice."},
+ {lvl:3,type:"multi",q:"Which TWO words can start a dependent clause?",choices:["because","and","while","but"],a:[0,2],why:"*Because* and *while* are subordinating conjunctions; they start dependent clauses. *And* and *but* join two complete sentences in a compound sentence."}
 ]},
 {id:"runon",name:"Run-ons & fixing sentences",qs:[
  {type:"mc",q:"Which sentence is a RUN-ON?",choices:["The game was fun, and we won.","The game was fun we won.","The game was fun. We won.","Because we won, the game was fun."],a:1,why:"*The game was fun we won* jams two sentences together with nothing joining them. That is a run-on."},
  {type:"mc",q:"Which is the best way to fix this run-on?",sent:"My dog loves the park she runs in circles.",choices:["My dog loves the park, she runs in circles.","My dog loves the park. She runs in circles.","My dog loves the park she, runs in circles.","My dog loves. The park she runs in circles."],a:1,why:"Split it into two sentences: *My dog loves the park. She runs in circles.* A comma alone (choice A) is still wrong."},
- {type:"mc",q:"Which is the best way to fix this run-on?",sent:"It was late we still finished the puzzle.",choices:["It was late, but we still finished the puzzle.","It was late, we still finished the puzzle.","It was late we, still finished the puzzle.","It was. Late we still finished the puzzle."],a:0,why:"Add a comma and a conjunction: *, but*. Use *but* because finishing was surprising since it was late."},
- {type:"mc",q:"Which sentence is a comma splice (two sentences joined by only a comma)?",choices:["I like pizza, and my brother likes tacos.","I like pizza, my brother likes tacos.","I like pizza and tacos.","Although I like pizza, my brother likes tacos."],a:1,why:"*I like pizza, my brother likes tacos* joins two full sentences with only a comma. Fix it with *, and* or a period."},
- {type:"multi",q:"Which TWO are correct ways to fix this run-on?",sent:"The snow kept falling school was canceled.",choices:["The snow kept falling, so school was canceled.","The snow kept falling, school was canceled.","Because the snow kept falling, school was canceled.","The snow kept falling school, was canceled."],a:[0,2],why:"You can make a compound sentence (*, so*) or a complex sentence (*Because …,*). A comma alone doesn't fix it."},
+ {lvl:2,type:"mc",q:"Which is the best way to fix this run-on?",sent:"It was late we still finished the puzzle.",choices:["It was late, but we still finished the puzzle.","It was late, we still finished the puzzle.","It was late we, still finished the puzzle.","It was. Late we still finished the puzzle."],a:0,why:"Add a comma and a conjunction: *, but*. Use *but* because finishing was surprising since it was late."},
+ {lvl:2,type:"mc",q:"Which sentence is a comma splice (two sentences joined by only a comma)?",choices:["I like pizza, and my brother likes tacos.","I like pizza, my brother likes tacos.","I like pizza and tacos.","Although I like pizza, my brother likes tacos."],a:1,why:"*I like pizza, my brother likes tacos* joins two full sentences with only a comma. Fix it with *, and* or a period."},
+ {lvl:2,type:"multi",q:"Which TWO are correct ways to fix this run-on?",sent:"The snow kept falling school was canceled.",choices:["The snow kept falling, so school was canceled.","The snow kept falling, school was canceled.","Because the snow kept falling, school was canceled.","The snow kept falling school, was canceled."],a:[0,2],why:"You can make a compound sentence (*, so*) or a complex sentence (*Because …,*). A comma alone doesn't fix it."},
  {type:"mc",q:"Is this a complete sentence, a fragment, or a run-on?",sent:"When we got to the beach.",choices:["Complete sentence","Fragment","Run-on"],keep:1,a:1,why:"*When we got to the beach* is a dependent clause by itself. It leaves you asking, *What happened?* So it is a fragment."},
  {type:"mc",q:"Is this a complete sentence, a fragment, or a run-on?",sent:"We got to the beach the waves were huge.",choices:["Complete sentence","Fragment","Run-on"],keep:1,a:2,why:"Two sentences with nothing between them: *We got to the beach* / *the waves were huge*. That is a run-on."},
  {type:"mc",q:"Is this a complete sentence, a fragment, or a run-on?",sent:"When we got to the beach, the waves were huge.",choices:["Complete sentence","Fragment","Run-on"],keep:1,a:0,why:"A dependent clause + comma + independent clause is a complete (complex) sentence."},
- {type:"mc",q:"Which is the best way to fix this fragment?",sent:"Since the bus was late.",choices:["Since the bus was late!","Since the bus was late, we missed the first bell.","Since. The bus was late.","The bus since was late."],a:1,why:"Attach the dependent clause to an independent clause: *Since the bus was late, we missed the first bell.*"}
+ {lvl:2,type:"mc",q:"Which is the best way to fix this fragment?",sent:"Since the bus was late.",choices:["Since the bus was late!","Since the bus was late, we missed the first bell.","Since. The bus was late.","The bus since was late."],a:1,why:"Attach the dependent clause to an independent clause: *Since the bus was late, we missed the first bell.*"},
+ {lvl:3,type:"mc",q:"Read the paragraph. Which sentence is a run-on?",sent:"(1) Our class went to the aquarium. (2) We saw a giant octopus it changed colors. (3) Because the sharks were feeding. (4) Everyone crowded around the tank.",choices:["Sentence 1","Sentence 2","Sentence 3","Sentence 4"],keep:1,a:1,why:"Sentence 2 jams two sentences together: *We saw a giant octopus* / *it changed colors*. Fix: *We saw a giant octopus, and it changed colors.*"},
+ {lvl:3,type:"mc",q:"Read the same paragraph. Which sentence is a fragment?",sent:"(1) Our class went to the aquarium. (2) We saw a giant octopus it changed colors. (3) Because the sharks were feeding. (4) Everyone crowded around the tank.",choices:["Sentence 1","Sentence 2","Sentence 3","Sentence 4"],keep:1,a:2,why:"Sentence 3 is only a dependent clause. Fix by joining it: *Because the sharks were feeding, everyone crowded around the tank.*"},
+ {lvl:3,type:"mc",q:"Which is the best correction?",sent:"The movie was scary my little sister covered her eyes she still wanted to watch.",choices:["The movie was scary, so my little sister covered her eyes, but she still wanted to watch.","The movie was scary, my little sister covered her eyes, she still wanted to watch.","The movie was scary. My little sister covered her eyes she still wanted to watch.","The movie was scary so my little sister, covered her eyes but she still wanted to watch."],a:0,why:"There are THREE sentences here. A joins them with *, so* and *, but*. B uses only commas, C still has a run-on at the end, and D has the commas in the wrong places."},
+ {lvl:3,type:"mc",q:"Which revision fixes the fragment correctly?",sent:"We packed sandwiches. In case we got hungry on the hike.",choices:["We packed sandwiches in case we got hungry on the hike.","We packed sandwiches, in case. We got hungry on the hike.","We packed sandwiches. In case, we got hungry on the hike.","In case we got hungry on the hike."],a:0,why:"Attach the dependent clause to the sentence before it. Because it comes at the end, no comma is needed."}
 ]}
 ];
 
@@ -265,7 +310,7 @@ const TIPS={
 // (realistic fiction, folktale, biography, expository). Paragraphs are numbered like the test.
 // q.para highlights that paragraph while the question is open.
 const STORIES=[
-{id:"lemon",title:"The Lemonade Problem",genre:"Realistic fiction",text:[
+{id:"lemon",lvl:1,title:"The Lemonade Problem",genre:"Realistic fiction",text:[
  "Nora had been saving for a new bike helmet for three weeks, but her jar held only eleven dollars. The helmet she wanted cost twenty-five. \"At this rate, I'll be in fifth grade before I can ride to school,\" she grumbled.",
  "On Saturday morning, Nora set up a lemonade stand at the end of her driveway. She painted a sign, filled a pitcher, and waited. An hour later, she had sold exactly two cups, both to her neighbor, Mr. Ortiz, who said he was \"very thirsty, very thirsty indeed.\"",
  "Nora slumped in her chair. Hardly anyone walked down her quiet street. Then she noticed something: every few minutes, a runner jogged past on the trail behind her house. The runners looked hot and tired, and none of them could see her stand.",
@@ -280,7 +325,7 @@ const STORIES=[
  {type:"mc",skill:"Context clues",para:3,q:"In paragraph 3, what does the word *slumped* mean?",choices:["Jumped up quickly","Sat down in a tired, sad way","Laughed loudly","Stood very straight"],a:1,why:"Nora had just sold only two cups, so she was disappointed. *Slumped* means sat or fell down heavily, like when you feel tired or sad."},
  {type:"mc",skill:"Theme",q:"Which sentence BEST states the theme of the story?",choices:["Lemonade is the best drink on a hot day.","Running is good exercise.","When a plan isn't working, look closely and try a new idea.","Always listen to your neighbors."],a:2,why:"Nora didn't give up. She noticed the runners and changed her plan. Dad's words in paragraph 6 point to this lesson."}
 ]},
-{id:"stone",title:"The Stone in the Road",genre:"Folktale",text:[
+{id:"stone",lvl:1,title:"The Stone in the Road",genre:"Folktale",text:[
  "Long ago, a wise king wanted to know which of his people truly cared about their village. Early one morning, he placed a large stone in the middle of the main road. Then he hid behind a tree to watch.",
  "First came a rich merchant riding in a cart. When his cart bumped into the stone, he shouted, \"Who left this here? The king should fix these roads!\" He steered around the stone and went on his way.",
  "Next came two soldiers. They complained loudly about the lazy people who never cleaned anything. But they, too, simply walked around the stone.",
@@ -295,7 +340,7 @@ const STORIES=[
  {type:"mc",skill:"Theme",q:"What is the theme (lesson) of this folktale?",choices:["Rich people always get what they want.","Instead of complaining about a problem, help fix it.","Never leave stones in the road.","Kings like to play tricks."],a:1,why:"The king's note says *Every problem in the road is a chance to help.* The person who helped was rewarded."},
  {type:"multi",skill:"Character",q:"Which TWO things do the merchant and the soldiers have in common?",choices:["They complain about the stone or the road.","They move the stone.","They walk or ride around the stone.","They find the gold."],a:[0,2],why:"Paragraphs 2 and 3: both complain and both go around it."}
 ]},
-{id:"patrick",title:"The Woman Who Listened to Rivers",genre:"Biography",text:[
+{id:"patrick",lvl:2,title:"The Woman Who Listened to Rivers",genre:"Biography",text:[
  "When Ruth Patrick was a little girl in the early 1900s, her father took her on walks along streams near their home. He gave her a small microscope, and together they looked at drops of water. To Ruth's amazement, the drops were full of tiny living things.",
  "That curiosity stayed with her. Ruth studied biology in college and became an expert on diatoms, tiny one-celled algae that live in water. Diatoms are so small that you need a microscope to see them, but they are very important. Many animals in a river depend on them for food.",
  "In the 1940s, few people thought about the health of rivers. Factories often dumped waste straight into the water. Ruth had an idea: instead of testing the water for just one chemical, she would study ALL the living things in a river. If many kinds of plants and animals were thriving, the river was healthy. If only a few kinds could survive, something was wrong.",
@@ -309,7 +354,7 @@ const STORIES=[
  {type:"mc",skill:"Sequence",q:"Which event happened LAST?",choices:["Ruth studied biology in college.","Ruth looked at water drops with her father.","Ruth received the National Medal of Science.","Ruth became an expert on diatoms."],a:2,why:"The awards come in the last paragraph, after her many years of work."},
  {type:"mc",skill:"Author's purpose",q:"Why did the author MOST LIKELY write this passage?",choices:["To persuade readers to become scientists","To entertain readers with a funny story","To inform readers about Ruth Patrick and her work","To explain how to build a microscope"],a:2,why:"It is a biography full of facts about a real person. Its purpose is to inform."}
 ]},
-{id:"talent",title:"No Talent for the Talent Show",genre:"Realistic fiction",text:[
+{id:"talent",lvl:1,title:"No Talent for the Talent Show",genre:"Realistic fiction",text:[
  "Everyone in Ms. Kim's class had signed up for the school talent show except Dev. Priya was going to juggle. Marcus was going to play the drums. Even quiet Lily was going to recite a poem she wrote.",
  "\"I don't have a talent,\" Dev told his grandmother that night. \"I can't sing, I can't dance, and the last time I tried to juggle, I broke a lamp.\"",
  "Grandma laughed. \"What about the stories you tell your little sister at bedtime? She begs for them every night.\"",
@@ -324,7 +369,7 @@ const STORIES=[
  {type:"mc",skill:"Context clues",para:6,q:"In paragraph 6, the word *flashy* means —",choices:["very bright and showy","quiet and simple","slow","scary"],a:0,why:"The sentence contrasts *loud or flashy* talents with something you've done *all along*. Flashy means showy, getting attention."},
  {type:"mc",skill:"Theme",q:"What lesson does Dev learn?",choices:["Juggling is harder than it looks.","Everyone should play an instrument.","A talent can be something you already do well, even if it seems ordinary.","Grandmothers always know best."],a:2,why:"The last sentence says a talent can be *something you have been doing all along.*"}
 ]},
-{id:"lighthouse",title:"Keepers of the Light",genre:"Expository text",text:[
+{id:"lighthouse",lvl:2,title:"Keepers of the Light",genre:"Expository text",text:[
  "Before modern GPS, sailors had a hard time knowing exactly where they were, especially at night or in fog. Rocky coasts were dangerous. A ship that came too close to shore could crash and sink. Lighthouses were built to warn sailors and guide them safely.",
  "A lighthouse is a tall tower with a powerful light at the top. In the past, the light came from fires, candles or oil lamps. Later, a special glass called a Fresnel lens was invented. It bent and focused the light into a strong beam that could be seen more than twenty miles away.",
  "Each lighthouse had its own pattern of flashes, a little like a code. One lighthouse might flash every five seconds, while another might flash twice and then pause. By counting the flashes, sailors could tell which lighthouse they were looking at and figure out where they were.",
@@ -338,7 +383,7 @@ const STORIES=[
  {type:"mc",skill:"Compare & contrast",q:"How is finding the way at sea TODAY different from the past?",choices:["Today, ships use satellites instead of mostly depending on lighthouses.","Today, ships only sail during the day.","Today, there are no rocky coasts.","Today, sailors count flashes more carefully."],a:0,why:"Paragraph 5: *ships use satellites to find their way* and most lighthouses are automatic."},
  {type:"mc",skill:"Author's purpose",q:"Why does the author include paragraph 5?",choices:["To explain how a Fresnel lens works","To tell how lighthouses are used and remembered today","To describe a dangerous storm","To persuade readers to become keepers"],a:1,why:"Paragraph 5 moves to the present: lighthouses are automatic, but people still visit them."}
 ]},
-{id:"turtle",title:"Turtle Races the Rain",genre:"Folktale",text:[
+{id:"turtle",lvl:1,title:"Turtle Races the Rain",genre:"Folktale",text:[
  "In the dry season, the animals of the grassland gathered under the great baobab tree. The water hole had shrunk to a muddy puddle, and everyone was thirsty.",
  "\"The rain clouds live beyond the mountains,\" said Elephant. \"Someone must go and ask them to come.\" Cheetah boasted that she was the fastest. Eagle bragged that he could fly the highest. They argued for so long that the sun went down.",
  "While the others argued, Turtle quietly started walking toward the mountains. \"You'll never make it,\" laughed Cheetah. \"You're slower than a melting rock!\"",
@@ -353,7 +398,7 @@ const STORIES=[
  {type:"mc",skill:"Context clues",para:2,q:"In paragraph 2, *boasted* means —",choices:["whispered","bragged about herself","cried","asked a question"],a:1,why:"The next sentence uses a synonym clue: Eagle *bragged*. Boasted and bragged mean the same thing."},
  {type:"mc",skill:"Theme",q:"Which BEST states the theme of the folktale?",choices:["Actions matter more than words.","Fast animals are the smartest.","It always rains after a dry season.","Never travel alone."],a:0,why:"Elephant says it directly: *Talking about what you can do is not the same as doing it.*"}
 ]},
-{id:"garden",title:"The Rooftop Garden",genre:"Realistic fiction",text:[
+{id:"garden",lvl:2,title:"The Rooftop Garden",genre:"Realistic fiction",text:[
  "Ever since her family moved to the city, Camila missed her grandmother's garden. Their new apartment building had no yard, only a flat gray roof with a few old chairs.",
  "One day, Camila asked the building manager, Mrs. Chen, if she could grow plants on the roof. Mrs. Chen frowned. \"Soil is heavy, and plants need lots of water. I don't think it will work.\"",
  "Camila didn't give up. At the library, she found a book about container gardens. She learned that light pots, special lightweight soil and a rain barrel could solve both of Mrs. Chen's worries. She wrote a plan and drew a map of where each pot would go.",
@@ -368,7 +413,7 @@ const STORIES=[
  {type:"multi",skill:"Cause & effect",q:"Which TWO things happen BECAUSE of Camila's garden?",choices:["Neighbors start meeting and talking on the roof.","Camila's family moves to the city.","Other families ask for their own pots.","The library gets new books."],a:[0,2],why:"Paragraphs 5 and 6: neighbors meet to admire it, and other families want pots."},
  {type:"mc",skill:"Theme",q:"What is the theme of this story?",choices:["City life is better than country life.","Careful planning and not giving up can change someone's mind.","Tomatoes are easy to grow.","Building managers don't like gardens."],a:1,why:"Camila heard *no* at first but planned carefully and kept trying, and it worked."}
 ]},
-{id:"bats",title:"Bats: Night Helpers",genre:"Expository text",text:[
+{id:"bats",lvl:2,title:"Bats: Night Helpers",genre:"Expository text",text:[
  "Many people think bats are spooky. In stories, they flap around haunted houses on dark nights. But scientists say bats are some of the most helpful animals on Earth.",
  "Most bats eat insects. A single little brown bat can catch hundreds of mosquitoes and moths in one hour. Because bats eat so many insects, farmers do not need to use as many chemicals to protect their crops. Scientists believe bats save farmers in the United States billions of dollars every year.",
  "Other bats help plants grow. Fruit bats eat fruit and then drop the seeds as they fly, which helps new trees sprout far away. Some bats drink nectar from flowers. As they move from flower to flower, they carry pollen, just like bees do. Bananas, mangoes and the agave plant all depend on bats.",
@@ -381,6 +426,68 @@ const STORIES=[
  {type:"mc",skill:"Context clues",para:4,q:"Based on paragraph 4, *echolocation* is —",choices:["a type of cave","finding things by listening to echoes of sounds","a kind of fruit","a way bats sleep"],a:1,why:"The paragraph defines it: the bat squeaks, the sound bounces back, and the bat listens to find things."},
  {type:"mc",skill:"Main idea & details",para:3,q:"What is the main idea of paragraph 3?",choices:["Bananas are a healthy snack.","Some bats help plants grow and spread.","Bats drink a lot of water.","Fruit bats are the largest bats."],a:1,why:"Every sentence tells how bats help plants: dropping seeds and carrying pollen."},
  {type:"mc",skill:"Author's purpose",para:1,q:"Why does the author begin with how bats appear in spooky stories?",choices:["To show that bats are dangerous","To set up the idea that people are wrong about bats","To tell a scary story","To explain where bats live"],a:1,why:"Paragraph 1 says many people think bats are spooky, *But* scientists say they are helpful. The author sets up a wrong idea and then corrects it."}
+]},
+{id:"partner",lvl:3,title:"The Quiet Partner",genre:"Realistic fiction",text:[
+ "When Ms. Rivera read the science fair partners aloud, Jada's heart sank. \"Jada and Mateo.\" Mateo had joined the class only three weeks earlier, and Jada had barely heard him say a word.",
+ "Their project was supposed to answer a question: How can we make dirty water cleaner? For the first week, Jada did all the talking. She suggested ideas, wrote the plan, and made a list of supplies. Mateo nodded, scribbled in a small blue notebook, and said almost nothing.",
+ "\"He's not even trying,\" Jada complained to her older brother that night. \"I'm going to end up doing the whole thing myself.\"",
+ "On Friday, Mateo walked into class carrying a cardboard box. Inside was a tall plastic bottle that had been cut in half and turned upside down. It was packed with layers of gravel, sand and charcoal, each one carefully labeled. Taped to the side was a page from the blue notebook, covered with neat drawings and arrows that showed how water would trickle down through every layer.",
+ "\"I tried it four times at home,\" Mateo said quietly. \"The first time, the water came out brown. Then I added more sand.\" He poured a cup of murky pond water into the top. The class watched as the water slowly dripped out the bottom, much clearer than before.",
+ "Jada stared at the notebook. She had thought Mateo was just doodling, but every page was a plan. \"Why didn't you tell me?\" she asked.",
+ "Mateo shrugged and looked at the floor. \"At my old school, we spoke Spanish most of the day. I like to be sure about something before I say it in English.\"",
+ "Jada thought about all the times she had talked over him. \"Well,\" she said, sliding the notebook back to him, \"you're sure about this. Will you explain the layers at the fair? I'll make the poster.\" For the first time, Mateo grinned."
+],qs:[
+ {type:"mc",skill:"Character",q:"Based on paragraphs 1–3, what does Jada believe about Mateo at first?",choices:["He is the smartest student in class.","He is not helping with the project.","He wants a different partner.","He does not like science."],a:1,why:"Paragraph 3: *He's not even trying.* She thinks she will have to do everything herself."},
+ {type:"ab",skill:"Text evidence",a:{q:"How do Jada's feelings about Mateo change by the end of the story?",choices:["She goes from annoyed to respecting him.","She goes from liking him to feeling jealous.","She goes from shy to bossy.","Her feelings do not change."],a:0},b:{q:"Which TWO sentences BEST support your answer to Part A?",choices:["\"'He's not even trying,' Jada complained to her older brother that night.\"","\"Inside was a tall plastic bottle that had been cut in half…\"","\"Jada thought about all the times she had talked over him.\"","\"The class watched as the water slowly dripped out the bottom…\""],a:[0,2]},why:"At first she complains he isn't trying (paragraph 3). Later she realizes she talked over him and asks him to explain at the fair (paragraph 8). One sentence shows the BEFORE and one shows the AFTER."},
+ {type:"mc",skill:"Context clues",para:5,q:"In paragraph 5, what does *murky* mean?",choices:["Cold and icy","Dark and dirty","Sweet-smelling","Bubbly"],a:1,why:"The water had to be cleaned, and it came out *much clearer than before*. So murky is the opposite of clear: dark and dirty."},
+ {type:"mc",skill:"Author's purpose",para:4,q:"Why does the author describe the drawings and arrows in Mateo's notebook?",choices:["To show that Mateo likes art more than science","To show that Mateo had been carefully planning all along","To explain how to make a poster","To show that Mateo was not listening in class"],a:1,why:"Paragraph 6 explains: *She had thought Mateo was just doodling, but every page was a plan.* The detail shows how much work he had done."},
+ {type:"mc",skill:"Point of view",q:"The story is told in third person and follows Jada's thoughts. What would readers MOST LIKELY learn sooner if Mateo told the story?",choices:["What Jada's brother said","Why Mateo was quiet and what he was building at home","What Ms. Rivera thought of the project","How the science fair ended"],a:1,why:"Readers only find out about the filter and his reason for being quiet when Jada does. Mateo's point of view would show his thoughts from the start."},
+ {type:"mc",skill:"Theme",q:"Which BEST states the theme of the story?",choices:["Science fairs are hard work.","Don't judge someone before you understand them.","Always do the whole project yourself.","Speaking two languages is easy."],a:1,why:"Jada judged Mateo as lazy, but she was wrong. Once she understood him, they worked as a team."}
+]},
+{id:"sky",lvl:3,title:"Why the Sky Is Far Away",genre:"Folktale (retold from Nigeria)",text:[
+ "Long ago, the sky hung so low that people could reach up and touch it. In those days, no one had to plant crops or cook. Whenever people were hungry, they simply broke off a piece of the sky and ate it. The sky tasted like whatever they wished: sweet yams one day, rich stew the next.",
+ "But the people grew careless. They broke off more than they could eat and threw the leftovers into the garbage heaps. The sky watched the scraps pile up, and it grew angry.",
+ "One evening, the sky darkened and its voice rumbled across the land. \"Do not waste me,\" it warned. \"Take only what you need, or I will go away.\" The king ordered everyone to be careful. For a while, they were.",
+ "Then came the night of the great festival. There was music and dancing, and everyone ate and ate. A woman named Adese, who was famous for always wanting more, reached up and tore off a huge piece of the sky. She ate until she could not take another bite. Still, half the piece was left.",
+ "Adese did not want anyone to see. She called her husband, but he was full. She called her children, but they were full, too. At last, she wrapped the leftover sky in leaves and buried it in the garbage heap behind her house.",
+ "The next morning, the people woke to find the sky rising higher and higher, far out of their reach. \"You were warned,\" it said. \"Now you must work for your food.\"",
+ "From that day on, people have had to clear fields, plant seeds and wait for the harvest. And when they look up at the faraway sky, they remember the price of being wasteful."
+],qs:[
+ {type:"mc",skill:"Cause & effect",q:"What is the MAIN reason the sky moves away?",choices:["The king orders it to leave.","People keep wasting it even after being warned.","The festival music is too loud.","Adese's husband refuses to eat."],a:1,why:"The sky warned people not to waste it (paragraph 3). When Adese threw away a big piece (paragraph 5), the sky kept its promise and left."},
+ {type:"mc",skill:"Character",para:4,q:"The author says Adese was *famous for always wanting more*. Why is this detail important?",choices:["It explains why she took more than she could eat.","It shows that she was the best dancer.","It tells why the king liked her.","It explains why she was hungry in the morning."],a:0,why:"This trait sets up what happens next: she tears off a huge piece, more than she could finish."},
+ {type:"ab",skill:"Text evidence",a:{q:"How does Adese MOST LIKELY feel when she buries the leftover sky?",choices:["Proud of how much she ate","Worried about getting caught","Excited to plant crops","Angry at the king"],a:1},b:{q:"Which sentence BEST supports your answer to Part A?",choices:["\"She ate until she could not take another bite.\"","\"Adese did not want anyone to see.\"","\"There was music and dancing, and everyone ate and ate.\"","\"From that day on, people have had to clear fields…\""],a:1},why:"She hides it because she knows she broke the rule. *Adese did not want anyone to see* shows she was worried about being caught."},
+ {type:"mc",skill:"Compare & contrast",q:"How is life at the END of the folktale different from life at the beginning?",choices:["At the end, people must grow their own food.","At the end, the sky tastes better.","At the end, there are no more festivals.","At the end, the king lives in the sky."],a:0,why:"At first, people just broke off the sky to eat. At the end, they must *clear fields, plant seeds and wait for the harvest*."},
+ {type:"mc",skill:"Author's purpose",q:"Many folktales explain why something in nature is the way it is. What does this folktale explain?",choices:["Why it rains during festivals","Why the sky is far away and people must farm","Why yams are sweet","Why kings make rules"],a:1,why:"The title and the ending both explain it: the sky moved far away, so people had to farm."},
+ {type:"multi",skill:"Theme",q:"Which TWO lessons does this folktale teach?",choices:["Do not be wasteful.","Dancing at festivals is wrong.","Actions have consequences for everyone.","Always share food with your husband."],a:[0,2],why:"The sky left because of waste, and ONE person's choice changed life for ALL the people. Those are the big lessons."}
+]},
+{id:"glaciers",lvl:3,title:"Rivers of Ice",genre:"Expository text",text:[
+ "A glacier is a huge mass of ice that moves slowly over land. It may not look like it is moving at all, but a glacier is a little like a very slow river. Some glaciers creep only a few inches a day. Others can slide more than a hundred feet in a single day.",
+ "Glaciers form in places where more snow falls in winter than melts in summer. Year after year, the snow piles up. The weight of the new snow presses down on the old snow beneath it and squeezes it into hard, solid ice. When the ice becomes thick and heavy enough, gravity begins to pull it downhill.",
+ "As a glacier moves, it changes the land beneath it. Rocks frozen into the bottom of the ice scrape the ground like giant sandpaper. Over thousands of years, this scraping can erode, or wear away, even solid rock. Glaciers can turn a narrow, V-shaped river valley into a wide valley shaped like the letter U. Yosemite Valley in California was carved this way.",
+ "Glaciers also carry rocks and soil with them, sometimes for hundreds of miles. When a glacier melts, it drops everything it was carrying. These piles of rock and dirt are called moraines. Some long hills in the northern United States are moraines left behind by glaciers that melted thousands of years ago.",
+ "Today, glaciers cover about one-tenth of Earth's land. Scientists study them closely because many glaciers are shrinking as the planet warms. Glaciers store a large amount of Earth's fresh water, so changes in glaciers can affect the rivers and lakes that people depend on."
+],qs:[
+ {type:"mc",skill:"Main idea & details",q:"Which sentence BEST states the main idea of the WHOLE passage?",choices:["Yosemite Valley is in California.","Glaciers are slow-moving masses of ice that shape the land and are important to study.","Some glaciers move a hundred feet a day.","Snow falls more in winter than in summer."],a:1,why:"The passage explains what glaciers are, how they form, how they change land, and why scientists study them. The other choices are single details."},
+ {type:"mc",skill:"Sequence",para:2,q:"According to paragraph 2, what happens right BEFORE a glacier starts moving downhill?",choices:["The ice melts into a river.","The ice becomes thick and heavy enough.","Rocks freeze into the bottom.","A moraine forms."],a:1,why:"*When the ice becomes thick and heavy enough, gravity begins to pull it downhill.*"},
+ {type:"mc",skill:"Context clues",para:3,q:"In paragraph 3, what does *erode* mean?",choices:["Build up","Wear away","Freeze","Measure"],a:1,why:"The author defines it right in the sentence: *erode, or wear away*. Watch for the word *or* followed by a definition."},
+ {type:"mc",skill:"Figurative language",para:3,q:"The author says rocks in the ice scrape the ground *like giant sandpaper*. Why does the author use this comparison?",choices:["To show that glaciers are soft","To help readers picture how glaciers rub and wear down rock","To explain how sandpaper is made","To show that glaciers are made of sand"],a:1,why:"Most readers know how sandpaper rubs wood smooth. The simile helps you picture the glacier grinding the ground."},
+ {type:"ab",skill:"Text evidence",a:{q:"Why do scientists study glaciers closely today?",choices:["Glaciers are growing quickly.","Changes in glaciers can affect fresh water people depend on.","Glaciers are the fastest-moving things on Earth.","They want to build new valleys."],a:1},b:{q:"Which sentence BEST supports your answer to Part A?",choices:["\"Today, glaciers cover about one-tenth of Earth's land.\"","\"Glaciers store a large amount of Earth's fresh water, so changes in glaciers can affect the rivers and lakes that people depend on.\"","\"Some glaciers creep only a few inches a day.\"","\"These piles of rock and dirt are called moraines.\""],a:1},why:"Paragraph 5 gives the reason directly: glaciers hold fresh water, so changes affect rivers and lakes."},
+ {type:"mc",skill:"Cause & effect",q:"How is the text in paragraphs 3 and 4 MOSTLY organized?",choices:["Problem and solution","Cause and effect: how glaciers change the land","Compare and contrast two glaciers","A story told in time order"],a:1,why:"These paragraphs tell what glaciers DO (the causes) and the results (U-shaped valleys and moraines)."}
+]},
+{id:"anning",lvl:3,title:"Mary Anning, Fossil Hunter",genre:"Biography",text:[
+ "Mary Anning was born in 1799 in Lyme Regis, a small town on the southern coast of England. The cliffs near her home were full of fossils, the remains of animals that had lived millions of years earlier. Mary's father, a cabinetmaker, collected these fossils and sold them to tourists.",
+ "Mary's father took her along on his hunts and taught her how to spot fossils in the crumbling rock. But when Mary was just eleven, her father died. The family was left poor and in debt. Selling fossils was no longer a hobby. It was how they would survive.",
+ "Around 1811, Mary's older brother Joseph found a strange skull in the cliffs. Over the next year, Mary carefully dug out the rest of the skeleton. It was a long creature with a pointed snout and flippers. Scientists later named it an ichthyosaur, which means \"fish lizard.\" Mary was about twelve years old.",
+ "Mary kept searching the cliffs, often after storms, when fresh rock had fallen. The work was dangerous. In 1833, a landslide nearly killed her, and it did kill her dog, Tray. Even so, Mary made more important discoveries, including the first complete skeleton of a plesiosaur, a sea reptile with a very long neck.",
+ "Scientists traveled to Lyme Regis to learn from Mary and to buy her fossils. Yet because she was a woman, she was not allowed to join the Geological Society of London, the most important group of scientists who studied rocks and fossils. Some scientists wrote about her discoveries without mentioning her name.",
+ "Mary Anning died in 1847. Today, she is honored as one of the most important fossil hunters in history. Her discoveries helped scientists understand that many kinds of animals had lived on Earth long ago and had since disappeared."
+],qs:[
+ {type:"mc",skill:"Cause & effect",para:2,q:"What was one EFFECT of Mary's father's death?",choices:["Mary stopped looking for fossils.","Selling fossils became how the family survived.","Mary joined the Geological Society.","The family moved to London."],a:1,why:"Paragraph 2: *Selling fossils was no longer a hobby. It was how they would survive.*"},
+ {type:"mc",skill:"Sequence",q:"Which event happened FIRST?",choices:["Mary found the first complete plesiosaur.","A landslide nearly killed Mary.","Joseph found a strange skull in the cliffs.","Mary's father taught her to spot fossils."],a:3,why:"Her father taught her BEFORE he died, when she was eleven. The skull was found around 1811, and the landslide was in 1833."},
+ {type:"ab",skill:"Text evidence",a:{q:"Based on paragraph 5, what can the reader conclude about how Mary was treated?",choices:["Scientists ignored her completely.","She was respected for her skill but not treated fairly.","She was the leader of the Geological Society.","She did not want credit for her work."],a:1},b:{q:"Which TWO sentences BEST support your answer to Part A?",choices:["\"Scientists traveled to Lyme Regis to learn from Mary and to buy her fossils.\"","\"Mary Anning died in 1847.\"","\"Some scientists wrote about her discoveries without mentioning her name.\"","\"The work was dangerous.\""],a:[0,2]},why:"Scientists came to learn from her (respect), but some left out her name and she couldn't join the society (unfair)."},
+ {type:"mc",skill:"Character",para:4,q:"Which word BEST describes Mary, based on paragraph 4?",choices:["Careless","Determined","Lazy","Bored"],a:1,why:"Even after a landslide nearly killed her, she kept searching and made more discoveries. That shows determination."},
+ {type:"mc",skill:"Context clues",para:3,q:"In paragraph 3, the name *ichthyosaur* means \"fish lizard.\" Why do you think scientists chose that name?",choices:["The animal lived in a lizard's nest.","The animal had flippers and a fishlike shape but was a reptile.","Mary named it after her dog.","It was found in a fish market."],a:1,why:"Paragraph 3 describes flippers and a pointed snout (fishlike), and *saur* means lizard or reptile."},
+ {type:"mc",skill:"Author's purpose",q:"Why did the author MOST LIKELY write this passage?",choices:["To explain how to find fossils safely","To inform readers about Mary Anning's life, discoveries and challenges","To persuade readers to visit England","To entertain readers with a made-up adventure"],a:1,why:"It is a biography of a real person. It gives facts about her life, her finds, and how she was treated."}
 ]}
 ];
 
@@ -391,11 +498,32 @@ const LS="rc_ivana_v1";
 function lsGet(){try{return JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return{}}}
 function lsSet(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}}
 let st=lsGet();
-st.runs=st.runs||[];      // {at,kind,name,right,total}
+st.runs=st.runs||[];      // {at,kind,name,right,total,lvl}
 st.skill=st.skill||{};    // skill -> {r,t}
-st.miss=st.miss||{};      // question id -> times missed (cleared after 2 right in a row)
+st.miss=st.miss||{};      // question id -> right answers still needed to clear it
 st.seen=st.seen||{};      // question id -> times answered
+st.lv=st.lv||{};          // track -> {top: highest unlocked, cur: level she's playing, pass: passes at top}
+["read","gram"].forEach(t=>{st.lv[t]=st.lv[t]||{top:1,cur:1,pass:0}});
 function save(){lsSet(st)}
+
+// Each level is harder AND stricter. Pass a level PASSES_NEEDED times (at its score) to unlock the next.
+const PASSES_NEEDED=2;
+const LEVELS={
+ read:[
+  {name:"Warm-up",desc:"Easier stories. The paragraph for each question is highlighted. Answers checked as you go.",need:.8,stories:[1],count:1,hl:true,test:false},
+  {name:"Stretch",desc:"Harder stories. No highlighting: find the paragraph yourself.",need:.8,stories:[2],count:1,hl:false,test:false},
+  {name:"Challenge",desc:"Challenge stories with harder questions. Test mode: answers are shown only at the end.",need:.83,stories:[3],count:1,hl:false,test:true},
+  {name:"Test day",desc:"Two stories in a row (12 questions), test mode.",need:.9,stories:[2,3],count:2,hl:false,test:true}
+ ],
+ gram:[
+  {name:"Basics",desc:"Name the kind of sentence, find subjects and predicates, spot fragments.",need:.8,mix:{1:1},n:10,test:false},
+  {name:"Combine",desc:"Combine sentences, choose conjunctions, place commas.",need:.9,mix:{1:.3,2:1},n:10,test:false},
+  {name:"Tricky",desc:"Proofreading, comma traps and tricky clauses.",need:.9,mix:{2:.4,3:1},n:10,test:false},
+  {name:"Test day",desc:"12 questions from every topic, test mode.",need:.9,mix:{2:.6,3:1},n:12,test:true}
+ ]
+};
+const TRACK_NAME={read:"Reading",gram:"Grammar"};
+const needCount=(L,total)=>Math.ceil(L.need*total-1e-9);
 
 const LETTERS="ABCDEFGH";
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -405,48 +533,58 @@ const fmt=s=>esc(s).replace(/\*([^*]+)\*/g,"<em>$1</em>");
 
 // Index every question by id so misses can be replayed on their own.
 const ALL={};
-STORIES.forEach(s=>s.qs.forEach((q,i)=>{q.id=s.id+"."+i;q.story=s.id;ALL[q.id]=q}));
-GRAMMAR.forEach(t=>t.qs.forEach((q,i)=>{q.id="g."+t.id+"."+i;q.skill=q.skill||t.name;q.topic=t.id;ALL[q.id]=q}));
+STORIES.forEach(s=>{s.lvl=s.lvl||1;s.qs.forEach((q,i)=>{q.id=s.id+"."+i;q.story=s.id;ALL[q.id]=q})});
+GRAMMAR.forEach(t=>t.qs.forEach((q,i)=>{q.id="g."+t.id+"."+i;q.skill=q.skill||t.name;q.topic=t.id;q.lvl=q.lvl||1;ALL[q.id]=q}));
 const storyById=Object.fromEntries(STORIES.map(s=>[s.id,s]));
 const topicById=Object.fromEntries(GRAMMAR.map(t=>[t.id,t]));
 
 function show(id){["home","quiz","done"].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0)}
 
 // ---------- session ----------
-let S=null; // {kind,name,items:[q],i,right,wrong:[],story}
-function pickWeighted(qs,n){
-  // unseen and missed questions first, then the rest
-  const scored=shuffle(qs).map(q=>[q,(st.miss[q.id]||0)*3+(st.seen[q.id]?0:2)+Math.random()]);
+let S=null; // {kind,track,lvl,counts,name,items:[q],i,right,wrong:[],hl,test}
+function pickWeighted(qs,n,weight){
+  // missed and unseen questions first, then the rest; weight(q) favors the level's own questions
+  const scored=shuffle(qs).map(q=>[q,((st.miss[q.id]||0)*3+(st.seen[q.id]?0:2)+Math.random()*2)*(weight?weight(q):1)]);
   return scored.sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0]);
 }
-function nextStory(){
-  // the story read least often, ties broken randomly
-  const counts=STORIES.map(s=>[s,st.runs.filter(r=>r.kind==="story"&&r.name===s.title).length+Math.random()*.5]);
-  return counts.sort((a,b)=>a[1]-b[1])[0][0];
-}
-function startStory(s){
-  S={kind:"story",name:s.title,story:s,items:s.qs.slice(),i:0,right:0,wrong:[]};
+function storiesFor(levels){return STORIES.filter(s=>levels.includes(s.lvl))}
+function timesRead(s){return st.runs.filter(r=>r.kind==="story"&&(r.ids||[r.name]).some(x=>x===s.id||x===s.title)).length}
+function leastRead(list,n){return list.map(s=>[s,timesRead(s)+Math.random()*.5]).sort((a,b)=>a[1]-b[1]).slice(0,n).map(x=>x[0])}
+
+function startReading(lvl){
+  const L=LEVELS.read[lvl-1];
+  const picked=leastRead(storiesFor(L.stories),L.count);
+  S={kind:"story",track:"read",lvl,counts:true,name:L.count>1?"Test day: "+picked.map(s=>s.title).join(" + "):picked[0].title,ids:picked.map(s=>s.id),
+     items:picked.flatMap(s=>s.qs),i:0,right:0,wrong:[],hl:L.hl,test:L.test};
   begin();
 }
-function startGrammar(topicId){
-  let pool, name;
-  if(topicId){const t=topicById[topicId];pool=t.qs;name=t.name}
-  else{
-    // mixed drill leans toward her weakest topics
-    pool=[];GRAMMAR.forEach(t=>{const w=1+Math.round((1-acc(t.name,0.5))*2);for(let k=0;k<w;k++)pool.push(...t.qs)});
-    pool=[...new Set(pool)];name="Mixed grammar";
-  }
-  S={kind:"grammar",name,items:shuffle(pickWeighted(pool,10)),i:0,right:0,wrong:[]};
+function startStory(s){
+  // a story picked from the list plays with the rules of its own level
+  const L=LEVELS.read[s.lvl-1];
+  S={kind:"story",track:"read",lvl:s.lvl,counts:s.lvl===st.lv.read.top&&L.count===1,name:s.title,ids:[s.id],items:s.qs.slice(),i:0,right:0,wrong:[],hl:L.hl,test:L.test};
+  begin();
+}
+function startGrammar(lvl){
+  const L=LEVELS.gram[lvl-1];
+  const pool=GRAMMAR.flatMap(t=>t.qs).filter(q=>L.mix[q.lvl]);
+  S={kind:"grammar",track:"gram",lvl,counts:true,name:"Grammar level "+lvl,items:shuffle(pickWeighted(pool,L.n,q=>L.mix[q.lvl])),i:0,right:0,wrong:[],test:L.test};
+  begin();
+}
+function startTopic(topicId){
+  // topic practice: her current grammar level and below, never counts toward a level
+  const t=topicById[topicId], lvl=st.lv.gram.cur;
+  let pool=t.qs.filter(q=>q.lvl<=lvl);
+  if(pool.length<6)pool=t.qs.filter(q=>q.lvl<=Math.max(lvl,2));
+  S={kind:"topic",track:"gram",lvl,counts:false,name:t.name,topic:topicId,items:shuffle(pickWeighted(pool,10,q=>q.lvl===lvl?2:1)),i:0,right:0,wrong:[],test:false};
   begin();
 }
 function startMisses(){
   const ids=Object.keys(st.miss).filter(id=>ALL[id]);
   if(!ids.length)return;
-  const items=shuffle(ids).slice(0,10).map(id=>ALL[id]);
-  S={kind:"miss",name:"Fix my mistakes",items,i:0,right:0,wrong:[]};
+  S={kind:"miss",counts:false,name:"Fix my mistakes",items:shuffle(ids).slice(0,10).map(id=>ALL[id]),i:0,right:0,wrong:[],hl:true,test:false};
   begin();
 }
-function begin(){show("quiz");renderPassage();renderQ()}
+function begin(){show("quiz");renderQ()}
 
 // ---------- passage ----------
 function storyHTML(s,hl){
@@ -457,14 +595,18 @@ function storyHTML(s,hl){
 let curStory=null;
 function renderPassage(){
   const q=S.items[S.i];
-  curStory=q&&q.story?storyById[q.story]:null;
-  $("passWrap").hidden=$("passToggle").hidden=!curStory;
-  if(curStory){$("passage").innerHTML=storyHTML(curStory,q.para);}
+  const next=q&&q.story?storyById[q.story]:null;
+  $("passWrap").hidden=$("passToggle").hidden=!next;
+  if(next){
+    $("passage").innerHTML=storyHTML(next,S.hl?q.para:0);
+    if(next!==curStory){$("passage").scrollTop=0}
+  }
+  curStory=next;
 }
 $("passToggle").onclick=()=>{const p=$("passage");p.classList.toggle("folded");$("passToggle").textContent=p.classList.contains("folded")?"Show whole story":"Make story smaller"};
 
 // ---------- question ----------
-// types: mc {q,choices,a,why} | multi {q,choices,a:[..],why} | ab {a:{q,choices,a},b:{q,choices,a},why} | tap {q,parts:[..],a:idx or [..],why}
+// types: mc {q,choices,a,why} | multi {q,choices,a:[..],why} | ab {a:{q,choices,a},b:{q,choices,a},why} (a part's a can be [..]) | tap {q,parts:[..],a:idx or [..],why}
 let sel=null, checked=false;
 function choiceList(container,q,part){
   const order=q.keep?q.choices.map((_,i)=>i):shuffle(q.choices.map((_,i)=>i));
@@ -477,21 +619,22 @@ function choiceList(container,q,part){
   });
   container.appendChild(box);
 }
+function chooseN(el,n){const h=document.createElement("p");h.className="muted";h.style.margin="-6px 0 10px";h.textContent="Choose "+n+" answers.";el.appendChild(h)}
 function renderQ(){
   const q=S.items[S.i];checked=false;
-  $("qcount").textContent=(S.i+1)+" / "+S.items.length;
+  $("qcount").textContent=(S.i+1)+" / "+S.items.length+(S.test?" · test mode":"");
   $("qprog").style.width=(S.i/S.items.length*100)+"%";
-  $("fb").hidden=true;$("check").textContent="Check";$("check").disabled=true;
+  $("fb").hidden=true;$("check").textContent=S.test?(S.i+1>=S.items.length?"Finish test":"Next"):"Check";$("check").disabled=true;
   const c=$("qcard");c.textContent="";
-  const tag=document.createElement("p");tag.className="qtag";tag.textContent=q.skill+(q.para?" · paragraph "+q.para:"");c.appendChild(tag);
+  const tag=document.createElement("p");tag.className="qtag";tag.textContent=q.skill+(q.para&&S.hl?" · paragraph "+q.para:"");c.appendChild(tag);
   if(q.type==="ab"){
-    sel={a:null,b:null};
-    addText(c,"Part A: "+q.a.q);choiceList(c,q.a,"a");
+    sel={a:Array.isArray(q.a.a)?[]:null,b:Array.isArray(q.b.a)?[]:null};
+    addText(c,"Part A: "+q.a.q);if(Array.isArray(q.a.a))chooseN(c,q.a.a.length);choiceList(c,q.a,"a");
     const pb=document.createElement("div");pb.className="partb";c.appendChild(pb);
-    addText(pb,"Part B: "+q.b.q);choiceList(pb,q.b,"b");
+    addText(pb,"Part B: "+q.b.q);if(Array.isArray(q.b.a))chooseN(pb,q.b.a.length);choiceList(pb,q.b,"b");
   }else if(q.type==="tap"){
     sel=[];addText(c,q.q);
-    if(q.hint){const h=document.createElement("p");h.className="muted";h.style.margin="-6px 0 10px";h.textContent=q.hint;c.appendChild(h)}
+    if(q.hint&&S.lvl!==4){const h=document.createElement("p");h.className="muted";h.style.margin="-6px 0 10px";h.textContent=q.hint;c.appendChild(h)}
     const box=document.createElement("div");box.className="chips";
     q.parts.forEach((w,i)=>{const b=document.createElement("button");b.textContent=w;b.dataset.i=i;b.setAttribute("aria-pressed","false");
       b.onclick=()=>{if(checked)return;const multi=Array.isArray(q.a);
@@ -504,46 +647,57 @@ function renderQ(){
     sel=q.type==="multi"?[]:null;
     addText(c,q.q);
     if(q.sent){const p=document.createElement("p");p.className="sent";p.innerHTML=fmt(q.sent);c.appendChild(p)}
-    if(q.type==="multi"){const h=document.createElement("p");h.className="muted";h.style.margin="-6px 0 10px";h.textContent="Choose "+q.a.length+" answers.";c.appendChild(h)}
+    if(q.type==="multi")chooseN(c,q.a.length);
     choiceList(c,q,"x");
   }
+  if(S.test&&S.i===0){const n=document.createElement("p");n.className="testnote";n.style.marginTop="12px";n.textContent="Test mode: like the real test, you'll see which answers were right at the end.";c.appendChild(n)}
   renderPassage();
 }
 function addText(el,t){const p=document.createElement("p");p.className="qtext";p.innerHTML=fmt(t);el.appendChild(p)}
+function toggle(cur,ci,btn){const on=btn.getAttribute("aria-pressed")!=="true";btn.setAttribute("aria-pressed",on);return on?[...cur,ci]:cur.filter(x=>x!==ci)}
 function pick(part,ci,btn,box){
   if(checked)return;
   const q=S.items[S.i];
-  if(q.type==="multi"){
-    const on=btn.getAttribute("aria-pressed")!=="true";btn.setAttribute("aria-pressed",on);
-    sel=on?[...sel,ci]:sel.filter(x=>x!==ci);
-    $("check").disabled=sel.length!==q.a.length;return;
+  if(q.type==="multi"){sel=toggle(sel,ci,btn);$("check").disabled=sel.length!==q.a.length;return}
+  if(q.type==="ab"){
+    const want=q[part].a;
+    if(Array.isArray(want))sel[part]=toggle(sel[part],ci,btn);
+    else{box.querySelectorAll(".ch").forEach(x=>x.setAttribute("aria-pressed","false"));btn.setAttribute("aria-pressed","true");sel[part]=ci}
+    const done=p=>Array.isArray(q[p].a)?sel[p].length===q[p].a.length:sel[p]!==null;
+    $("check").disabled=!(done("a")&&done("b"));return;
   }
   box.querySelectorAll(".ch").forEach(x=>x.setAttribute("aria-pressed","false"));btn.setAttribute("aria-pressed","true");
-  if(q.type==="ab"){sel[part]=ci;$("check").disabled=sel.a===null||sel.b===null}
-  else{sel=ci;$("check").disabled=false}
+  sel=ci;$("check").disabled=false;
 }
-const sameSet=(x,y)=>x.length===y.length&&x.every(v=>y.includes(v));
+const sameSet=(x,y)=>{x=[].concat(x);y=[].concat(y);return x.length===y.length&&x.every(v=>y.includes(v))};
 function grade(){
   const q=S.items[S.i];
-  if(q.type==="ab")return sel.a===q.a.a&&sel.b===q.b.a;
-  if(q.type==="multi")return sameSet(sel,q.a);
-  if(q.type==="tap")return sameSet(sel,[].concat(q.a));
+  if(q.type==="ab")return sameSet(sel.a,q.a.a)&&sameSet(sel.b,q.b.a);
+  if(q.type==="multi"||q.type==="tap")return sameSet(sel,q.a);
   return sel===q.a;
 }
 function markChoices(box,correct,picked){
   box.querySelectorAll(".ch").forEach(b=>{const ci=+b.dataset.ci;
     if([].concat(correct).includes(ci))b.classList.add("right");else if([].concat(picked).includes(ci))b.classList.add("wrong")});
 }
-function answerText(q,which){
+function answerText(q,which,yours){
   const p=(sub,v)=>[].concat(v).map(i=>sub.choices[i]).join(" / ");
-  if(q.type==="ab")return which==="right"?"A: "+p(q.a,q.a.a)+" — B: "+p(q.b,q.b.a):"A: "+p(q.a,sel.a)+" — B: "+p(q.b,sel.b);
-  if(q.type==="tap")return (which==="right"?[].concat(q.a):sel).map(i=>q.parts[i]).join(" … ");
-  return p(q,which==="right"?q.a:sel);
+  if(q.type==="ab")return which==="right"?"A: "+p(q.a,q.a.a)+" — B: "+p(q.b,q.b.a):"A: "+p(q.a,yours.a)+" — B: "+p(q.b,yours.b);
+  if(q.type==="tap")return (which==="right"?[].concat(q.a):yours).map(i=>q.parts[i]).join(" … ");
+  return p(q,which==="right"?q.a:yours);
 }
 $("check").onclick=()=>{
-  if(checked){S.i++;if(S.i>=S.items.length)finish();else{renderQ();window.scrollTo(0,curStory?0:0)}return}
+  const q=S.items[S.i];
+  if(S.test){
+    // test mode: no feedback, move straight on
+    const ok=grade();record(q,ok);
+    if(ok)S.right++;else S.wrong.push({q,yours:answerText(q,"yours",sel)});
+    S.i++;if(S.i>=S.items.length)finish();else{renderQ();window.scrollTo(0,0)}
+    return;
+  }
+  if(checked){S.i++;if(S.i>=S.items.length)finish();else{renderQ();window.scrollTo(0,0)}return}
   checked=true;
-  const q=S.items[S.i],ok=grade();
+  const ok=grade();
   const c=$("qcard");
   if(q.type==="ab"){const bx=c.querySelectorAll(".choices");markChoices(bx[0],q.a.a,sel.a);markChoices(bx[1],q.b.a,sel.b)}
   else if(q.type==="tap"){c.querySelectorAll(".chips button").forEach(b=>{const i=+b.dataset.i;if([].concat(q.a).includes(i))b.classList.add("right");else if(sel.includes(i))b.classList.add("wrong")})}
@@ -551,7 +705,7 @@ $("check").onclick=()=>{
   const fb=$("fb");fb.hidden=false;fb.className="fb "+(ok?"ok":"no");
   fb.innerHTML="<b>"+(ok?pickOne(["Yes!","Correct!","You got it!","Nice reading!"]):"Not quite.")+"</b>"+fmt(q.why||"");
   record(q,ok);
-  if(ok)S.right++;else S.wrong.push({q,yours:answerText(q,"yours")});
+  if(ok)S.right++;else S.wrong.push({q,yours:answerText(q,"yours",sel)});
   $("check").textContent=S.i+1>=S.items.length?"See my score":"Next";
   fb.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
@@ -563,13 +717,38 @@ function record(q,ok){
   else st.miss[q.id]=2; // needs two right answers to leave the list
   save();
 }
+// Returns a message when this run moved her forward on the level ladder.
+function applyLevel(){
+  if(!S.counts)return null;
+  const lv=st.lv[S.track];
+  if(S.lvl!==lv.top)return null;
+  const L=LEVELS[S.track][S.lvl-1];
+  if(S.right<needCount(L,S.items.length))return {kind:"miss",need:needCount(L,S.items.length)};
+  lv.pass++;
+  if(lv.pass<PASSES_NEEDED)return {kind:"pass"};
+  if(lv.top>=LEVELS[S.track].length){lv.pass=PASSES_NEEDED;return {kind:"champ"}}
+  lv.top++;lv.cur=lv.top;lv.pass=0;
+  return {kind:"up"};
+}
 function finish(){
-  const run={at:Date.now(),kind:S.kind,name:S.name,right:S.right,total:S.items.length};
-  st.runs.push(run);st.runs=st.runs.slice(-300);save();
+  const run={at:Date.now(),kind:S.kind,name:S.name,right:S.right,total:S.items.length,lvl:S.lvl,ids:S.ids};
+  st.runs.push(run);st.runs=st.runs.slice(-300);
+  const lvMsg=applyLevel();save();
   $("score").textContent=S.right+"/"+S.items.length;
   const pct=Math.round(S.right/S.items.length*100);
   $("verdict").textContent=pct===100?"Perfect!":pct>=90?"That's an A!":pct>=80?"Solid B! Almost there.":pct>=70?"Good try! Read the tips below.":"Let's practice this more.";
-  $("detail").textContent=pct+"% · "+S.name;
+  $("detail").textContent=pct+"% · "+S.name+(S.lvl?" · "+TRACK_NAME[S.track]+" level "+S.lvl:"");
+  // level banner
+  const lu=$("levelup");lu.hidden=true;
+  if(lvMsg){
+    const lv=st.lv[S.track],tn=TRACK_NAME[S.track];
+    lu.hidden=false;
+    if(lvMsg.kind==="up"){const L=LEVELS[S.track][lv.top-1];lu.innerHTML="<b>Level up! 🎉</b><p>"+tn+" level "+lv.top+" unlocked: <strong>"+esc(L.name)+"</strong></p><p>"+esc(L.desc)+"</p>"}
+    else if(lvMsg.kind==="pass")lu.innerHTML="<b>Level passed! ⭐</b><p>Pass "+tn.toLowerCase()+" level "+S.lvl+" "+(PASSES_NEEDED-lv.pass)+" more time to unlock level "+(S.lvl+1)+".</p>";
+    else if(lvMsg.kind==="champ")lu.innerHTML="<b>Champion! 🏆</b><p>You beat the top "+tn.toLowerCase()+" level. Keep it up so you're ready for the real test.</p>";
+    else {lu.innerHTML="<p>Level "+S.lvl+" needs <strong>"+lvMsg.need+" of "+S.items.length+"</strong> to count as a pass. You got "+S.right+". Try another one!</p>";lu.style.background="var(--card)";lu.style.color="var(--ink)";lu.style.border="1px solid var(--edge)"}
+    if(lvMsg.kind!=="miss"){lu.style.background="";lu.style.color="";lu.style.border=""}
+  }
   // tip card: the lesson for the topic she missed most this round
   const tip=$("tip");tip.hidden=true;
   const missedSkills={};S.wrong.forEach(w=>{missedSkills[w.q.skill]=(missedSkills[w.q.skill]||0)+1});
@@ -579,39 +758,78 @@ function finish(){
   $("revLabel").textContent=S.wrong.length?"Look again":"No mistakes this time";
   S.wrong.forEach(w=>{const d=document.createElement("div");d.className="rv";
     const qt=w.q.type==="ab"?w.q.a.q:w.q.q;
-    d.innerHTML="<p><b>"+fmt(qt)+"</b></p>"+(w.q.sent?"<p>"+fmt(w.q.sent)+"</p>":"")+"<p class='yours'>You said: "+fmt(w.yours)+"</p><p class='ans'>Answer: "+fmt(answerText(w.q,"right"))+"</p><p>"+fmt(w.q.why||"")+"</p>";
+    const where=w.q.story&&S.items.some(x=>x.story!==w.q.story)?"<p class='muted'>"+esc(storyById[w.q.story].title)+(w.q.para?", paragraph "+w.q.para:"")+"</p>":"";
+    d.innerHTML=where+"<p><b>"+fmt(qt)+"</b></p>"+(w.q.sent?"<p>"+fmt(w.q.sent)+"</p>":"")+"<p class='yours'>You said: "+fmt(w.yours)+"</p><p class='ans'>Answer: "+fmt(answerText(w.q,"right"))+"</p><p>"+fmt(w.q.why||"")+"</p>";
     rv.appendChild(d)});
   show("done");renderHome();
 }
-$("again").onclick=()=>{if(S.kind==="story")startStory(nextStory());else if(S.kind==="miss"&&Object.keys(st.miss).length)startMisses();else startGrammar(S.kind==="grammar"&&S.name!=="Mixed grammar"?GRAMMAR.find(t=>t.name===S.name).id:null)};
+$("again").onclick=()=>{
+  if(S.kind==="story")startReading(st.lv.read.cur);
+  else if(S.kind==="grammar")startGrammar(st.lv.gram.cur);
+  else if(S.kind==="topic")startTopic(S.topic);
+  else if(Object.keys(st.miss).length)startMisses();else show("home");
+};
 $("home2").onclick=()=>show("home");
 $("quit").onclick=()=>show("home");
 window.goBack=()=>{if(!$("home").hidden)return"exit";show("home");return"nav"};
 
 // ---------- home ----------
 function acc(skill,dflt){const k=st.skill[skill];return k&&k.t?k.r/k.t:dflt}
+function levelLine(track){
+  const lv=st.lv[track],L=LEVELS[track][lv.cur-1];
+  if(lv.cur<lv.top)return "Practicing an earlier level. "+L.desc;
+  const total=track==="read"?L.count*6:L.n;
+  const champ=lv.top===LEVELS[track].length&&lv.pass>=PASSES_NEEDED;
+  return champ?"Top level beaten! 🏆 Keep practicing.":"Passed "+lv.pass+" of "+PASSES_NEEDED+" · need "+needCount(L,total)+"/"+total+" · "+L.desc;
+}
 function renderHome(){
   const nm=Object.keys(st.miss).filter(id=>ALL[id]).length;
   $("missSub").textContent=nm?nm+" question"+(nm>1?"s":"")+" to fix":"Nothing to fix yet. Questions you miss come back here";
   $("goMiss").disabled=!nm;$("goMiss").style.opacity=nm?1:.55;
-  $("testSub").textContent="Next story: "+nextStory().title;
+  const r=st.lv.read,g=st.lv.gram;
+  $("testTitle").textContent="Reading test · Level "+r.cur+" "+LEVELS.read[r.cur-1].name;
+  $("testSub").textContent=levelLine("read");
+  $("gramTitle").textContent="Grammar · Level "+g.cur+" "+LEVELS.gram[g.cur-1].name;
+  $("gramSub").textContent=levelLine("gram");
+  // level ladders
+  const ld=$("ladders");ld.textContent="";
+  ["read","gram"].forEach(t=>{
+    const lv=st.lv[t],box=document.createElement("div");box.className="lad";
+    box.innerHTML="<b>"+TRACK_NAME[t]+"</b>";
+    const steps=document.createElement("div");steps.className="steps";
+    LEVELS[t].forEach((L,i)=>{const n=i+1,b=document.createElement("button");
+      const beaten=n<lv.top||(n===lv.top&&lv.pass>=PASSES_NEEDED);
+      b.innerHTML=(beaten?"✓ ":"")+"Level "+n+"<small>"+(n>lv.top?"🔒 ":"")+esc(L.name)+"</small>";
+      b.disabled=n>lv.top;
+      if(beaten)b.classList.add("done");else if(n===lv.top)b.classList.add("now");
+      if(n===lv.cur)b.classList.add("picked");
+      b.setAttribute("aria-pressed",n===lv.cur);
+      b.onclick=()=>{lv.cur=n;save();renderHome()};
+      steps.appendChild(b)});
+    box.appendChild(steps);ld.appendChild(box);
+  });
   const tp=$("topics");tp.textContent="";
-  GRAMMAR.forEach(t=>{const b=document.createElement("button");b.innerHTML=esc(t.name);const a=acc(t.name,null);if(a!==null)b.innerHTML+="<span class='pct'>"+Math.round(a*100)+"%</span>";b.onclick=()=>startGrammar(t.id);tp.appendChild(b)});
+  GRAMMAR.forEach(t=>{const b=document.createElement("button");b.innerHTML=esc(t.name);const a=acc(t.name,null);if(a!==null)b.innerHTML+="<span class='pct'>"+Math.round(a*100)+"%</span>";b.onclick=()=>startTopic(t.id);tp.appendChild(b)});
   const sp=$("stories");sp.textContent="";
-  STORIES.forEach(s=>{const b=document.createElement("button");b.innerHTML=esc(s.title);const last=st.runs.filter(r=>r.kind==="story"&&r.name===s.title).pop();if(last)b.innerHTML+="<span class='pct'>"+last.right+"/"+last.total+"</span>";b.onclick=()=>startStory(s);sp.appendChild(b)});
+  STORIES.forEach(s=>{const b=document.createElement("button");const locked=s.lvl>r.top;
+    b.innerHTML=(locked?"🔒 ":"")+esc(s.title)+"<span class='pct'>L"+s.lvl+"</span>";
+    const last=st.runs.filter(x=>x.kind==="story"&&x.total===6&&(x.ids?x.ids.includes(s.id):x.name===s.title)).pop();
+    if(last)b.innerHTML+="<span class='pct'>"+last.right+"/"+last.total+"</span>";
+    b.disabled=locked;if(locked)b.style.opacity=.5;
+    b.onclick=()=>startStory(s);sp.appendChild(b)});
   const sk=$("skills");sk.textContent="";
   const rows=Object.entries(st.skill).filter(([,v])=>v.t>=2).sort((a,b)=>a[1].r/a[1].t-b[1].r/b[1].t);
   if(!rows.length){const p=document.createElement("p");p.className="muted";p.textContent="School scores so far: Wonders U1 comprehension test 70%, U1 W4 grammar test 60%. Your practice shows up here, weakest skill first.";sk.appendChild(p)}
-  rows.slice(0,8).forEach(([name,v])=>{const pct=Math.round(v.r/v.t*100);const r=document.createElement("div");r.className="sk";
-    r.innerHTML="<span>"+esc(name)+"</span><div class='bar'><i class='"+(pct<70?"lo":pct<85?"mid":"")+"' style='width:"+pct+"%'></i></div><b>"+pct+"%</b>";sk.appendChild(r)});
+  rows.slice(0,8).forEach(([name,v])=>{const pct=Math.round(v.r/v.t*100);const row=document.createElement("div");row.className="sk";
+    row.innerHTML="<span>"+esc(name)+"</span><div class='bar'><i class='"+(pct<70?"lo":pct<85?"mid":"")+"' style='width:"+pct+"%'></i></div><b>"+pct+"%</b>";sk.appendChild(row)});
   const h=$("hist");h.textContent="";
   const recent=st.runs.slice(-8).reverse();
-  if(!recent.length){const p=document.createElement("p");p.className="muted";p.textContent="Start with a practice test. Your scores are saved on this phone.";h.appendChild(p)}
-  recent.forEach(r=>{const d=document.createElement("div");const dt=new Date(r.at);
-    d.innerHTML="<span>"+dt.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" · "+esc(r.name)+"</span><b>"+r.right+"/"+r.total+"</b>";h.appendChild(d)});
+  if(!recent.length){const p=document.createElement("p");p.className="muted";p.textContent="Start with a reading test. Your scores are saved on this phone.";h.appendChild(p)}
+  recent.forEach(x=>{const d=document.createElement("div");const dt=new Date(x.at);
+    d.innerHTML="<span>"+dt.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" · "+esc(x.name)+(x.lvl&&x.kind!=="grammar"?" · L"+x.lvl:"")+"</span><b>"+x.right+"/"+x.total+"</b>";h.appendChild(d)});
 }
-$("goTest").onclick=()=>startStory(nextStory());
-$("goGrammar").onclick=()=>startGrammar(null);
+$("goTest").onclick=()=>startReading(st.lv.read.cur);
+$("goGrammar").onclick=()=>startGrammar(st.lv.gram.cur);
 $("goMiss").onclick=startMisses;
 renderHome();
 </script>
